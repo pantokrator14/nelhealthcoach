@@ -19,7 +19,8 @@
     "test:clients": "tsx tests/clients.test.ts",
     "test:content": "tsx tests/content.test.ts",
     "test:notifications": "tsx tests/notifications.test.ts",
-    "test:auth": "tsx tests/auth.test.ts"
+    "test:auth": "tsx tests/auth.test.ts",
+    "test:error-cleanup": "tsx tests/error-cleanup.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",

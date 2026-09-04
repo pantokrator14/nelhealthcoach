@@ -8,7 +8,7 @@ import { apiClient } from '@/lib/api';
 import { generateClientPDF } from '@/lib/pdfGenerator';
 import Image from 'next/image'
 import AIRecommendationsModal from '../../../components/dashboard/AIRecommendationsModal';
-import { sanitizeProviderText } from '@/lib/aiVisibleText';
+import { translateGenerationError } from '@/lib/aiVisibleText';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../components/ui/Toast';
 import {
@@ -271,7 +271,10 @@ export default function ClientProfile() {
     if (aiGenerationStatus !== 'queued' || !clientId) return
 
     let pollCount = 0;
-    const MAX_POLLS = 30; // 5 minutos máximo (30 × 10s)
+    // 60 polls × 10s = 10 min: la generación con documentos médicos puede
+    // tardar 5-8 min (FASE 1 y FASE 2 con modelos reasoner + 32000 tokens).
+    // Antes: 30 polls (5 min) → la UI abandonaba justo cuando FASE 1 completaba.
+    const MAX_POLLS = 60;
 
     const pollInterval = setInterval(async () => {
       pollCount++;
@@ -280,13 +283,15 @@ export default function ClientProfile() {
         const sessions = result.data?.aiProgress?.sessions
         const genError = result.data?.generationError as { message?: string } | undefined
 
-        // ¿Error de generación reportado por Inngest?
+        // ¿Error de generación reportado por el worker de la cola?
         if (genError?.message) {
           setAiGenerationStatus('ready')
-          setAiError(sanitizeProviderText(genError.message))
+          // Mensaje localizado (el backend manda detalle técnico en español)
+          const friendlyError = translateGenerationError(genError.message, t)
+          setAiError(friendlyError)
           setIsGeneratingAI(false)
           clearInterval(pollInterval)
-          showToast(`❌ Error generando recomendaciones: ${sanitizeProviderText(genError.message)}`, 'error')
+          showToast(`${friendlyError}`, 'error')
           return
         }
 

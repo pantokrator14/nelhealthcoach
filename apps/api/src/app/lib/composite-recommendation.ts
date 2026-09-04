@@ -931,99 +931,125 @@ async function invokeLLM(
   const startedAt = new Date().toISOString();
   const logCtx = logger.withContext({ phase: phaseLabel });
 
-  logCtx.info("AI", `${phaseLabel}: Iniciando llamada LLM`, {
-    startedAt,
-    maxTokens: maxTokens ?? 16000,
-    systemChars: systemMsg.length,
-    humanChars: humanMsg.length,
-    totalChars: systemMsg.length + humanMsg.length,
-  });
+  // ── Reintento por presupuesto agotado en razonamiento ──
+  // deepseek-v4-flash razona ANTES de responder y el razonamiento consume del
+  // maxTokens. Si el presupuesto es bajo (FASE 1/3 usan 4000), el modelo puede
+  // gastarlo TODO en reasoning_content y devolver content VACÍO (0 chars) con
+  // finishReason='length' → robustJsonParse('') falla → "Fase 1 fallida".
+  // Fix: reintentar escalando maxTokens (4000 → 8000 → 16000) hasta obtener
+  // contenido no vacío. Evita falsos fallos con clientes/complejidad alta.
+  const MAX_LLM_ATTEMPTS = 3;
+  const attemptTokens = (attempt: number) =>
+    Math.min(32000, (maxTokens ?? 16000) * Math.pow(2, attempt));
 
-  const llm = await createDeepSeekJSONLLM({ maxTokens });
-  // Modelo real de la instancia creada (no el env de Gemini)
-  const modelUsed =
-    (llm as any)?.modelName || process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+  let lastMetadata: Record<string, unknown> | null = null;
+  let lastContent = '';
 
-  let response: any;
-  try {
-    response = await llm.invoke([
-      new SystemMessage(systemMsg),
-      new HumanMessage(humanMsg),
-    ]);
-  } catch (error: any) {
-    const elapsedMs = Date.now() - startedMs;
-    logCtx.error("AI", `${phaseLabel}: llm.invoke LANZÓ ERROR`, error, {
+  for (let attempt = 0; attempt < MAX_LLM_ATTEMPTS; attempt++) {
+    const tokens = attempt === 0 ? (maxTokens ?? 16000) : attemptTokens(attempt);
+    const attemptStart = Date.now();
+
+    logCtx.info("AI", `${phaseLabel}: Iniciando llamada LLM (intento ${attempt + 1}/${MAX_LLM_ATTEMPTS})`, {
       startedAt,
-      elapsedMs,
-      modelUsed,
-      errorName: error?.name,
-      errorCode: error?.code,
-      errorStatus: error?.status,
-      errorType: error?.error?.type,
-      errorMessage: error?.message?.substring(0, 500),
+      attempt,
+      maxTokens: tokens,
+      systemChars: systemMsg.length,
+      humanChars: humanMsg.length,
+      totalChars: systemMsg.length + humanMsg.length,
     });
-    throw error;
-  }
 
-  const elapsedMs = Date.now() - startedMs;
-  const content = typeof response?.content === "string" ? response.content : "";
-  const metadata = {
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    elapsedMs,
-    modelUsed,
-    finishReason:
+    const llm = await createDeepSeekJSONLLM({ maxTokens: tokens });
+    const modelUsed =
+      (llm as any)?.modelName || process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+
+    let response: any;
+    try {
+      response = await llm.invoke([
+        new SystemMessage(systemMsg),
+        new HumanMessage(humanMsg),
+      ]);
+    } catch (error: any) {
+      const elapsedMs = Date.now() - attemptStart;
+      logCtx.error("AI", `${phaseLabel}: llm.invoke LANZÓ ERROR (intento ${attempt + 1})`, error, {
+        startedAt,
+        elapsedMs,
+        modelUsed,
+        errorName: error?.name,
+        errorCode: error?.code,
+        errorStatus: error?.status,
+        errorType: error?.error?.type,
+        errorMessage: error?.message?.substring(0, 500),
+      });
+      if (attempt === MAX_LLM_ATTEMPTS - 1) throw error;
+      continue; // error transitorio → reintentar
+    }
+
+    const elapsedMs = Date.now() - attemptStart;
+    const content = typeof response?.content === "string" ? response.content : "";
+    lastContent = content;
+    const finishReason =
       response?.response_metadata?.finishReason ??
       response?.response_metadata?.finish_reason ??
-      null,
-    usage:
-      response?.usage_metadata ??
-      response?.response_metadata?.usage ??
-      null,
-    // Detalle de tokens: cuántos fueron de RAZONAMIENTO vs respuesta visible
-    outputTokenDetails:
-      response?.usage_metadata?.output_token_details ??
-      response?.response_metadata?.usage?.output_token_details ??
-      null,
-    inputTokenDetails:
-      response?.usage_metadata?.input_token_details ??
-      response?.response_metadata?.usage?.input_token_details ??
-      null,
-    // El proveedor a veces reporta el modelo REAL usado (puede diferir del pedido)
-    reportedModel:
-      response?.response_metadata?.model ??
-      response?.response_metadata?.model_name ??
-      null,
-    // DeepSeek reasoner devuelve el razonamiento en additional_kwargs.reasoning_content
-    additionalKwargsPreview: response?.additional_kwargs
-      ? JSON.stringify(response.additional_kwargs)?.substring(0, 600)
-      : null,
-    responseMetadataFull: response?.response_metadata
-      ? JSON.stringify(response.response_metadata)?.substring(0, 600)
-      : null,
-    responseContentType: typeof response?.content,
-    responseKeys: response ? Object.keys(response) : [],
-  };
+      null;
+    const metadata = {
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      elapsedMs,
+      attempt,
+      modelUsed,
+      finishReason,
+      usage:
+        response?.usage_metadata ??
+        response?.response_metadata?.usage ??
+        null,
+      outputTokenDetails:
+        response?.usage_metadata?.output_token_details ??
+        response?.response_metadata?.usage?.output_token_details ??
+        null,
+      inputTokenDetails:
+        response?.usage_metadata?.input_token_details ??
+        response?.response_metadata?.usage?.input_token_details ??
+        null,
+      reportedModel:
+        response?.response_metadata?.model ??
+        response?.response_metadata?.model_name ??
+        null,
+      additionalKwargsPreview: response?.additional_kwargs
+        ? JSON.stringify(response.additional_kwargs)?.substring(0, 600)
+        : null,
+      responseMetadataFull: response?.response_metadata
+        ? JSON.stringify(response.response_metadata)?.substring(0, 600)
+        : null,
+      responseContentType: typeof response?.content,
+      responseKeys: response ? Object.keys(response) : [],
+    };
+    lastMetadata = metadata;
 
-  if (content.length > 0) {
-    logCtx.info("AI", `${phaseLabel}: LLM respondió con ${content.length} caracteres`, {
+    if (content.length > 0) {
+      logCtx.info("AI", `${phaseLabel}: LLM respondió con ${content.length} caracteres`, {
+        ...metadata,
+        contentPreview: content.substring(0, 120),
+      });
+      return content;
+    }
+
+    // Contenido vacío: el modelo reasoner agotó el presupuesto razonando.
+    // Reintentar con MÁS tokens (solo si hay margen de intentos).
+    logCtx.warn("AI", `${phaseLabel}: LLM respondió con contenido VACÍO (0 chars) — reintentando con más tokens`, {
       ...metadata,
-      contentPreview: content.substring(0, 120),
-    });
-  } else {
-    logCtx.warn("AI", `${phaseLabel}: LLM respondió con contenido VACÍO (0 chars)`, {
-      ...metadata,
-      // Si content no es string, mostrar qué contiene realmente
       contentNonStringPreview:
         typeof response?.content !== "string"
           ? JSON.stringify(response?.content)?.substring(0, 300)
           : null,
-      // Volcar la respuesta cruda completa (truncada) para ver si el contenido
-      // llegó en otro campo (p.ej. reasoning_content)
       rawResponsePreview: JSON.stringify(response)?.substring(0, 1200),
     });
   }
-  return content;
+
+  // Si llegamos aquí: agotamos reintentos con contenido vacío
+  logCtx.error("AI", `${phaseLabel}: LLM devolvió vacío tras ${MAX_LLM_ATTEMPTS} intentos con maxTokens escalado`, undefined, {
+    lastMetadata,
+  });
+  return lastContent; // vacío — el caller hará robustJsonParse('') y fallará con mensaje claro
 }
 
 // ── Orquestador Principal (Pipeline Secuencial) ────────────
@@ -1072,7 +1098,14 @@ export async function generateCompositeRecommendation(input: CompositeInput): Pr
 
   logger.info("AI", "🔬 FASE 1: Iniciando análisis médico...");
   const medicalPrompt = buildMedicalPrompt(input);
-  const medicalContent = await invokeLLM(medicalPrompt.system, medicalPrompt.human, "FASE 1", 4000);
+  // maxTokens 32000 (antes 4000/8000): deepseek-v4-flash es modelo REASONER —
+  // el razonamiento consume del presupuesto y casos con documentos médicos
+  // necesitan ~12-18K tokens de salida (medido en prod 2026-09-04: reasoning
+  // 11688 + respuesta 6200). Con presupuesto bajo el modelo agotaba TODO en
+  // reasoning_content y devolvía content vacío (finishReason='length').
+  // Empezar en 32000 evita quemar 2 intentos fallidos (~200s) dentro de la
+  // ventana de 300s del worker de Vercel.
+  const medicalContent = await invokeLLM(medicalPrompt.system, medicalPrompt.human, "FASE 1", 32000);
 
   let medicalResult: MedicalOutput;
   try {

@@ -239,7 +239,33 @@ async function getHandler(
         } catch (genError: any) {
           const errMsg = genError?.message || 'Error desconocido generando recomendaciones';
           loggerWithContext.error('AI', '❌ Worker: generación falló', genError);
-          if (claimedJob.attempts! >= MAX_ATTEMPTS) {
+
+          // ── CARRERA ENTRE WORKERS ──
+          // Si OTRO worker ya creó una sesión después de que este reclamó el
+          // job (lease vencido → robo), este worker es el PERDEDOR: su error
+          // no debe persistirse encima de la sesión buena del ganador
+          // (bug visto en prod: error con timestamp posterior a la sesión OK).
+          const freshCheck = await healthForms.findOne(
+            { _id: new ObjectId(id) },
+            { projection: { 'aiProgress.sessions': 1 } }
+          );
+          const claimedAtMs = claimedJob.claimedAt ? new Date(claimedJob.claimedAt).getTime() : 0;
+          const loser =
+            claimedAtMs > 0 &&
+            (freshCheck?.aiProgress?.sessions || []).some((s: any) => {
+              const createdMs = s.createdAt ? new Date(s.createdAt).getTime() : 0;
+              return createdMs >= claimedAtMs;
+            });
+
+          if (loser) {
+            // Otro worker ganó: ignorar este error y cerrar el job como done
+            // (el objetivo — tener recomendaciones — ya se cumplió).
+            loggerWithContext.warn('AI', '⚠️ Worker perdedor: ya existe sesión creada tras mi claim — error ignorado', {
+              jobId: claimedJob._id?.toString(),
+              error: errMsg,
+            });
+            await completeAIJob(claimedJob._id!);
+          } else if (claimedJob.attempts! >= MAX_ATTEMPTS) {
             await failAIJob(claimedJob._id!, errMsg);
             // Persistir el error para que el polling del frontend lo muestre
             // (el GET ya devuelve aiProgress.generationError si existe).
@@ -421,6 +447,14 @@ async function postHandler(
       // lo ejecuta el worker-on-poll del GET al reclamar este job.
       // El frontend ya maneja { status: 'queued', jobId } → activa polling.
       const job = await enqueueAIJob({ clientId: id, monthNumber, coachNotes });
+
+      // Limpiar el generationError ANTERIOR (si lo hay): sin esto, el polling
+      // del frontend seguiría mostrando un error viejo de un intento previo
+      // mientras el job nuevo corre (error fantasma — bug reportado en prod).
+      await healthForms.updateOne(
+        { _id: new ObjectId(id) },
+        { $unset: { 'aiProgress.generationError': '' } }
+      );
 
       loggerWithContext.info('AI', 'Generación encolada', {
         jobId: job._id?.toString(),
@@ -1096,6 +1130,11 @@ async function putHandler(
             monthNumber: targetSession.monthNumber || 1,
             coachNotes: data?.coachNotes || '',
           });
+          // Limpiar generationError anterior (evita error fantasma durante el polling)
+          await healthForms.updateOne(
+            { _id: new ObjectId(id) },
+            { $unset: { 'aiProgress.generationError': '' } }
+          );
           console.log('🔁 Regeneración encolada:', regenJob._id?.toString());
           return NextResponse.json({
             success: true,

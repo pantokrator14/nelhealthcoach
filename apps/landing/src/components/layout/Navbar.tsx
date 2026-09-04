@@ -50,6 +50,7 @@ const Navbar: React.FC = () => {
     { id: 'inicio', labelKey: 'landing.nav.inicio' },
     { id: 'metodo', labelKey: 'landing.nav.metodo' },
     { id: 'sobre-mi', labelKey: 'landing.nav.sobreMi' },
+    { id: 'libro', labelKey: 'landing.nav.libro' },
     // { id: 'testimonios', labelKey: 'landing.nav.testimonios' },
     { id: 'contacto', labelKey: 'landing.nav.contacto' },
   ];

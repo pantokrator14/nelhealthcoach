@@ -37,8 +37,13 @@ export interface AIJobDoc {
   updatedAt: Date;
 }
 
-// Lease: si un worker no completa en 6 min, otro puede reclamar el job.
-// El frontend poll-ea máx 5 min (30 polls × 10s) y Vercel corta a 5 min.
+// Lease: tiempo tras el cual OTRO worker puede reclamar un job 'running'.
+// Debe ser MAYOR que la generación típica (FASE 1 ~110s + FASE 2 ~174s +
+// FASE 3 ≈ 5 min) para NO robar workers vivos (doble ejecución), pero lo más
+// corto posible para reintentar rápido tras la muerte del worker en Vercel
+// (corte a 300s). 6 min logra ambos: un worker sano de ≤5 min nunca se roba;
+// uno muerto a los 300s se reintenta ~1 min después (6 min desde el claim),
+// dentro de la ventana de polling de 10 min del frontend.
 export const JOB_LEASE_MS = 6 * 60 * 1000;
 export const MAX_ATTEMPTS = 3;
 
