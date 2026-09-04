@@ -11,7 +11,7 @@ import OriginPin from './OriginPin';
 import SessionScheduler from './SessionScheduler';
 import VideoCallRoom from './VideoCallRoom';
 import { useToast } from '@/components/ui/Toast';
-import { sanitizeProviderName } from '@/lib/aiVisibleText';
+import { sanitizeProviderName, translateGenerationError } from '@/lib/aiVisibleText';
 import { ChecklistItem, VideoSession, TranscriptStatus } from '../../../../../packages/types/src/healthForm';
 import { Recipe } from '../../../../../packages/types/src/recipe-types';
 import { useTranslation, Trans } from 'react-i18next';
@@ -1470,7 +1470,7 @@ export default function AIRecommendationsModal({
             const genErr = pollData?.aiProgress?.generationError?.message
               || pollData?.generationError?.message;
             if (genErr) {
-              showToast(`❌ ${genErr}`, 'error');
+              showToast(translateGenerationError(genErr, t), 'error');
               setLoading(false);
               return;
             }

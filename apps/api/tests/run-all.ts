@@ -19,6 +19,7 @@ const suites = [
   'clients.test.ts',            // clients CRUD + ownership
   'content.test.ts',            // recipes + exercises CRUD + roles
   'notifications.test.ts',      // notifications + misc
+  'error-cleanup.test.ts',      // POST limpia generationError viejo al encolar
   'queue.test.ts',              // cola propia (unit, sin LLM)
   'translate.test.ts',          // traducción (unit, mock LLM)
   'pdf-route.test.ts',          // route PDF real (LLM)

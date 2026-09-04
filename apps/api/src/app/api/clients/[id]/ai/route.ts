@@ -422,6 +422,14 @@ async function postHandler(
       // El frontend ya maneja { status: 'queued', jobId } → activa polling.
       const job = await enqueueAIJob({ clientId: id, monthNumber, coachNotes });
 
+      // Limpiar el generationError ANTERIOR (si lo hay): sin esto, el polling
+      // del frontend seguiría mostrando un error viejo de un intento previo
+      // mientras el job nuevo corre (error fantasma — bug reportado en prod).
+      await healthForms.updateOne(
+        { _id: new ObjectId(id) },
+        { $unset: { 'aiProgress.generationError': '' } }
+      );
+
       loggerWithContext.info('AI', 'Generación encolada', {
         jobId: job._id?.toString(),
         monthNumber,
@@ -1096,6 +1104,11 @@ async function putHandler(
             monthNumber: targetSession.monthNumber || 1,
             coachNotes: data?.coachNotes || '',
           });
+          // Limpiar generationError anterior (evita error fantasma durante el polling)
+          await healthForms.updateOne(
+            { _id: new ObjectId(id) },
+            { $unset: { 'aiProgress.generationError': '' } }
+          );
           console.log('🔁 Regeneración encolada:', regenJob._id?.toString());
           return NextResponse.json({
             success: true,

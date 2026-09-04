@@ -8,7 +8,7 @@ import { apiClient } from '@/lib/api';
 import { generateClientPDF } from '@/lib/pdfGenerator';
 import Image from 'next/image'
 import AIRecommendationsModal from '../../../components/dashboard/AIRecommendationsModal';
-import { sanitizeProviderText } from '@/lib/aiVisibleText';
+import { translateGenerationError } from '@/lib/aiVisibleText';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../components/ui/Toast';
 import {
@@ -280,13 +280,15 @@ export default function ClientProfile() {
         const sessions = result.data?.aiProgress?.sessions
         const genError = result.data?.generationError as { message?: string } | undefined
 
-        // ¿Error de generación reportado por Inngest?
+        // ¿Error de generación reportado por el worker de la cola?
         if (genError?.message) {
           setAiGenerationStatus('ready')
-          setAiError(sanitizeProviderText(genError.message))
+          // Mensaje localizado (el backend manda detalle técnico en español)
+          const friendlyError = translateGenerationError(genError.message, t)
+          setAiError(friendlyError)
           setIsGeneratingAI(false)
           clearInterval(pollInterval)
-          showToast(`❌ Error generando recomendaciones: ${sanitizeProviderText(genError.message)}`, 'error')
+          showToast(`${friendlyError}`, 'error')
           return
         }
 

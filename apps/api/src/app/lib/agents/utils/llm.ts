@@ -588,13 +588,29 @@ async function sendTextToDeepSeekREST(
   const choices = data.choices as Array<Record<string, unknown>> | undefined;
   const content = choices?.[0]?.message as Record<string, unknown> | undefined;
   const resultText = (content?.content as string) ?? '';
+  const finishReason = choices?.[0]?.finish_reason ?? choices?.[0]?.finishReason ?? null;
 
   logCtx.info('AI', `[${caller}] DeepSeek respondió exitosamente`, {
     duration,
     textLength: resultText.length,
+    finishReason,
+    reasoningTokens: (content as any)?.reasoning_content
+      ? ((content as any).reasoning_content as string).length
+      : 0,
   });
 
-  return resultText || `[Documento sin análisis: ${fileName}]`;
+  // SEC-ROBUSTEZ: respuesta vacía o solo-razonamiento (deepseek reasoner gastó
+  // todo el presupuesto en reasoning_content) → LANZAR para que el fallback
+  // (Gemini) se ejecute. Antes se devolvía "[Documento sin análisis: X]" que
+  // NO es JSON y corrompía el análisis aguas abajo (SyntaxError 'D').
+  if (!resultText || resultText.trim().length === 0) {
+    throw new Error(
+      `DeepSeek devolvió respuesta VACÍA para ${fileName} (finishReason=${finishReason ?? 'unknown'}). ` +
+      `Presupuesto agotado en razonamiento (reasoning_content). Reintentando con Gemini.`
+    );
+  }
+
+  return resultText;
 }
 
 // ─────────────────────────────────────────────
