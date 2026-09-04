@@ -830,6 +830,11 @@ export default function AIRecommendationsModal({
       setDisplayError(null);
     } else if (generationStatus === 'ready') {
       setGenerating(false);
+      // LIMPIAR error previo: la generación terminó (con sesión o con error
+      // ya comunicado por el padre). Sin esto, un error de un intento fallido
+      // del worker quedaba pintado aunque la sesión se generara después
+      // (bug visto en prod: banner rojo persistente con la sesión visible).
+      setDisplayError(null);
       // Recargar datos de IA (el polling del padre ya encontró resultados o error)
       loadAIProgress();
     }
@@ -840,8 +845,23 @@ export default function AIRecommendationsModal({
     if (generationError) {
       setDisplayError(generationError);
       setGenerating(false);
+    } else {
+      // El padre limpió el error (generación completada con sesión) → limpiar UI
+      setDisplayError(null);
     }
   }, [generationError]);
+
+  // Limpiar errores viejos cuando llega una sesión NUEVA: la generación en
+  // background puede completar mientras el modal está abierto con un error
+  // de un intento fallido previo. El banner rojo (displayError) debe
+  // desaparecer al cambiar de sesión; el amarillo (aiProgress.generationError)
+  // lo refresca loadAIProgress() con el dato fresco del servidor.
+  useEffect(() => {
+    if (activeSessionId && !generating) {
+      setDisplayError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSessionId]);
 
   // useEffect removed - month tabs replaced with session tabs
   // activeMonthTab now represents month within active session (1,2,3) for 12-week plans
@@ -1458,7 +1478,7 @@ export default function AIRecommendationsModal({
         // La regeneración quedó encolada (cola propia en Mongo, worker-on-poll):
         // el worker ejecuta el pipeline en el próximo GET y reemplaza la sesión
         // con un sessionId NUEVO. Poll-eamos hasta ver el cambio (o un error).
-        const MAX_REGEN_POLLS = 30; // 30 × 10s = 5 min
+        const MAX_REGEN_POLLS = 60; // 60 × 10s = 10 min (generación pesada con docs)
         for (let i = 0; i < MAX_REGEN_POLLS; i++) {
           await new Promise((r) => setTimeout(r, 10000));
           try {
@@ -2593,15 +2613,29 @@ export default function AIRecommendationsModal({
         )}
 
         {aiProgress?.generationError && (
-          <div className="bg-amber-50 border border-amber-300 rounded-none px-6 py-4 flex items-start">
-            <svg className="w-5 h-5 text-amber-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-amber-800 font-semibold text-sm">{t('ai.docAnalysisWarning')}</p>
-              <p className="text-amber-700 text-xs mt-1">{sanitizeProviderName(aiProgress.generationError.message)}</p>
-            </div>
-          </div>
+          (() => {
+            // Un generationError de nivel superior es relevante si:
+            //  a) NO hay sesión activa (fallo total de la generación), o
+            //  b) el error es ANTERIOR a la sesión activa (errores parciales
+            //     de documentos que acompañaron a esa generación).
+            // Si el error es POSTERIOR a la sesión, es de un worker
+            // perdedor/rezagado → no mostrar.
+            const show =
+              !activeSession?.createdAt ||
+              new Date(aiProgress.generationError!.timestamp).getTime() <=
+                new Date(activeSession.createdAt).getTime();
+            return show ? (
+              <div className="bg-amber-50 border border-amber-300 rounded-none px-6 py-4 flex items-start">
+                <svg className="w-5 h-5 text-amber-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-amber-800 font-semibold text-sm">{t('ai.docAnalysisWarning')}</p>
+                  <p className="text-amber-700 text-xs mt-1">{sanitizeProviderName(aiProgress.generationError!.message)}</p>
+                </div>
+              </div>
+            ) : null;
+          })()
         )}
 
         {activeSession?.sessionId?.startsWith('fallback_') && (

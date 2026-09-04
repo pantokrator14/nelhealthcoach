@@ -271,7 +271,10 @@ export default function ClientProfile() {
     if (aiGenerationStatus !== 'queued' || !clientId) return
 
     let pollCount = 0;
-    const MAX_POLLS = 30; // 5 minutos máximo (30 × 10s)
+    // 60 polls × 10s = 10 min: la generación con documentos médicos puede
+    // tardar 5-8 min (FASE 1 y FASE 2 con modelos reasoner + 32000 tokens).
+    // Antes: 30 polls (5 min) → la UI abandonaba justo cuando FASE 1 completaba.
+    const MAX_POLLS = 60;
 
     const pollInterval = setInterval(async () => {
       pollCount++;

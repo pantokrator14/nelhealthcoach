@@ -1098,11 +1098,14 @@ export async function generateCompositeRecommendation(input: CompositeInput): Pr
 
   logger.info("AI", "🔬 FASE 1: Iniciando análisis médico...");
   const medicalPrompt = buildMedicalPrompt(input);
-  // maxTokens 8000 (antes 4000): deepseek-v4-flash razona antes de responder y
-  // el razonamiento consume del presupuesto; con 4000 el modelo podía gastar
-  // TODO en reasoning_content y devolver content vacío (finishReason='length').
-  // invokeLLM ahora reintenta escalando (8000→16000→32000) si vuelve vacío.
-  const medicalContent = await invokeLLM(medicalPrompt.system, medicalPrompt.human, "FASE 1", 8000);
+  // maxTokens 32000 (antes 4000/8000): deepseek-v4-flash es modelo REASONER —
+  // el razonamiento consume del presupuesto y casos con documentos médicos
+  // necesitan ~12-18K tokens de salida (medido en prod 2026-09-04: reasoning
+  // 11688 + respuesta 6200). Con presupuesto bajo el modelo agotaba TODO en
+  // reasoning_content y devolvía content vacío (finishReason='length').
+  // Empezar en 32000 evita quemar 2 intentos fallidos (~200s) dentro de la
+  // ventana de 300s del worker de Vercel.
+  const medicalContent = await invokeLLM(medicalPrompt.system, medicalPrompt.human, "FASE 1", 32000);
 
   let medicalResult: MedicalOutput;
   try {
