@@ -25,14 +25,14 @@ async function deleteHandler(
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
 
     if (auth.role !== 'admin') {
       return NextResponse.json(
-        { success: false, message: 'Solo administradores pueden eliminar coaches' },
+        { success: false, message: 'Solo administradores pueden eliminar coaches', code: 'FORBIDDEN'},
         { status: 403 }
       );
     }
@@ -41,7 +41,7 @@ async function deleteHandler(
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        { success: false, message: 'ID de coach inválido' },
+        { success: false, message: 'ID de coach inválido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -59,7 +59,7 @@ async function deleteHandler(
     const coach = await Coach.findById(id);
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -70,7 +70,7 @@ async function deleteHandler(
     // Proteger: no se puede eliminar al admin
     if (coach.role === 'admin') {
       return NextResponse.json(
-        { success: false, message: 'No se puede eliminar una cuenta de administrador' },
+        { success: false, message: 'No se puede eliminar una cuenta de administrador', code: 'FORBIDDEN'},
         { status: 403 }
       );
     }
@@ -124,15 +124,14 @@ async function deleteHandler(
     });
   } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('COACHES', 'Error eliminando coach', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

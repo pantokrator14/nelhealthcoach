@@ -42,7 +42,7 @@ async function postHandler(
         console.error('❌', errorMsg);
         logger.warn('RECIPE_UPLOAD', 'Recipe ID no válido', undefined, { recipeId: id });
         return NextResponse.json(
-          { success: false, message: 'Recipe ID no válido' },
+          { success: false, message: 'Recipe ID no válido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -67,7 +67,7 @@ async function postHandler(
         const errorMsg = 'Faltan campos requeridos: fileName, fileType, fileSize';
         console.error('❌', errorMsg);
         return NextResponse.json(
-          { success: false, message: errorMsg },
+          { success: false, message: errorMsg, code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -92,7 +92,7 @@ async function postHandler(
         const errorMsg = `Tipo de archivo no permitido: ${fileType}. Solo se permiten imágenes para recetas`;
         console.error('❌', errorMsg);
         return NextResponse.json(
-          { success: false, message: 'Tipo de archivo no permitido para recetas (solo imágenes)' },
+          { success: false, message: 'Tipo de archivo no permitido para recetas (solo imágenes)', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -103,7 +103,7 @@ async function postHandler(
         const errorMsg = `La imagen es demasiado grande: ${(fileSize / 1024 / 1024).toFixed(2)}MB (máximo 10MB)`;
         console.error('❌', errorMsg);
         return NextResponse.json(
-          { success: false, message: 'La imagen es demasiado grande (máximo 10MB)' },
+          { success: false, message: 'La imagen es demasiado grande (máximo 10MB)', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -164,8 +164,7 @@ async function postHandler(
           { 
             success: false, 
             message: 'Error generando URL de upload',
-            ...(process.env.NODE_ENV === 'development' && { detail: s3Error.message || 'Error de S3' })
-          },
+            ...(process.env.NODE_ENV === 'development' && { detail: s3Error.message || 'Error de S3' }), code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -179,7 +178,7 @@ async function postHandler(
         recipeId: (await params).id
       });
       return NextResponse.json(
-        { success: false, message: 'Error interno del servidor' },
+        { success: false, message: 'Error interno del servidor', code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -210,7 +209,7 @@ async function putHandler(
         const errorMsg = `Recipe ID no válido en PUT: ${id}`;
         console.error('❌', errorMsg);
         return NextResponse.json(
-          { success: false, message: 'Recipe ID no válido' },
+          { success: false, message: 'Recipe ID no válido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -231,7 +230,7 @@ async function putHandler(
         const errorMsg = 'Faltan campos requeridos en PUT: fileKey, fileName, fileType, fileSize';
         console.error('❌', errorMsg);
         return NextResponse.json(
-          { success: false, message: errorMsg },
+          { success: false, message: errorMsg, code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -242,7 +241,7 @@ async function putHandler(
       if (!recipe) {
         console.error('❌ Receta no encontrada:', id);
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -376,7 +375,7 @@ async function putHandler(
       if (result.modifiedCount === 0) {
         console.error('❌ No se pudo actualizar la receta');
         return NextResponse.json(
-          { success: false, message: 'No se pudo actualizar la receta' },
+          { success: false, message: 'No se pudo actualizar la receta', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -407,8 +406,7 @@ async function putHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -439,7 +437,7 @@ async function deleteHandler(
       if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
         console.error('❌ Recipe ID no válido:', id);
         return NextResponse.json(
-          { success: false, message: 'Recipe ID no válido' },
+          { success: false, message: 'Recipe ID no válido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -455,7 +453,7 @@ async function deleteHandler(
       if (!fileKey) {
         console.error('❌ fileKey es requerido');
         return NextResponse.json(
-          { success: false, message: 'fileKey es requerido' },
+          { success: false, message: 'fileKey es requerido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -467,7 +465,7 @@ async function deleteHandler(
         console.error('❌ Receta no encontrada:', id);
         logger.warn('RECIPE_UPLOAD', 'Receta no encontrada', undefined, { recipeId: id });
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -503,7 +501,7 @@ async function deleteHandler(
       if (currentFileKey !== fileKey) {
         console.error('❌ La imagen no corresponde a esta receta');
         return NextResponse.json(
-          { success: false, message: 'La imagen no corresponde a esta receta' },
+          { success: false, message: 'La imagen no corresponde a esta receta', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -551,7 +549,7 @@ async function deleteHandler(
       if (result.modifiedCount === 0) {
         console.error('❌ No se pudo actualizar la receta');
         return NextResponse.json(
-          { success: false, message: 'No se pudo actualizar la receta' },
+          { success: false, message: 'No se pudo actualizar la receta', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -579,8 +577,7 @@ async function deleteHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -616,7 +613,7 @@ async function patchHandler(
       
       if (!recipe) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -678,7 +675,7 @@ async function patchHandler(
     }
     
     return NextResponse.json(
-      { success: false, message: 'Acción no válida' },
+      { success: false, message: 'Acción no válida', code: 'VALIDATION'},
       { status: 400 }
     );
     
@@ -689,7 +686,7 @@ async function patchHandler(
     console.error('❌ Error en PATCH /recipes/[id]/upload:', error);
     logger.error('RECIPE_UPLOAD', 'Error en endpoint PATCH', error as Error);
     return NextResponse.json(
-      { success: false, message: 'Error interno del servidor' },
+      { success: false, message: 'Error interno del servidor', code: 'INTERNAL'},
       { status: 500 }
     );
   }

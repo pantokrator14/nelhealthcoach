@@ -31,7 +31,7 @@ async function postHandler(request: NextRequest) {
 
     if (!coachId || !sessionId) {
       return NextResponse.json(
-        { success: false, message: 'coachId y sessionId son requeridos' },
+        { success: false, message: 'coachId y sessionId son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -49,7 +49,7 @@ async function postHandler(request: NextRequest) {
         statusCode: 404,
       });
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -70,7 +70,7 @@ async function postHandler(request: NextRequest) {
     } catch (stripeError) {
       logger.error('PAYMENTS', 'Error recuperando sesión de Stripe', stripeError as Error);
       return NextResponse.json(
-        { success: false, message: 'No se pudo verificar la sesión de pago. Intenta de nuevo o contacta a soporte.' },
+        { success: false, message: 'No se pudo verificar la sesión de pago. Intenta de nuevo o contacta a soporte.', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -83,7 +83,7 @@ async function postHandler(request: NextRequest) {
         coachId: coach._id.toString(),
       });
       return NextResponse.json(
-        { success: false, message: 'El pago no fue completado. Intenta de nuevo.' },
+        { success: false, message: 'El pago no fue completado. Intenta de nuevo.', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -96,7 +96,7 @@ async function postHandler(request: NextRequest) {
         coachId: coach._id.toString(),
       });
       return NextResponse.json(
-        { success: false, message: 'Sesión de pago inválida para verificación de trial.' },
+        { success: false, message: 'Sesión de pago inválida para verificación de trial.', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -222,8 +222,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

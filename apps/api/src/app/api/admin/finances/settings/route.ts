@@ -65,8 +65,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al obtener configuración fiscal',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -115,7 +114,7 @@ async function putHandler(request: NextRequest) {
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No hay campos válidos para actualizar' },
+        { success: false, message: 'No hay campos válidos para actualizar', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -165,8 +164,7 @@ async function putHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al actualizar configuración fiscal',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

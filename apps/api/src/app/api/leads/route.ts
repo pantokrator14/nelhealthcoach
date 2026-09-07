@@ -67,6 +67,7 @@ async function postHandler(request: NextRequest) {
             field: i.path.join('.'),
             message: i.message,
           })),
+          code: 'VALIDATION',
         },
         { status: 400 },
       );
@@ -303,8 +304,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

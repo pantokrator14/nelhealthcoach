@@ -84,7 +84,7 @@ async function getHandler(
 
     fileKey = request.nextUrl.searchParams.get('fileKey');
     if (!fileKey) {
-      return NextResponse.json({ success: false, message: 'fileKey requerido' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'fileKey requerido', code: 'VALIDATION'}, { status: 400 });
     }
 
     // ── Consulta de estado de extracción ──
@@ -141,8 +141,7 @@ async function getHandler(
       { 
         success: false, 
         message: 'Error generando URL',
-        ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }
@@ -169,7 +168,7 @@ async function postHandler(
       if (!id || id === 'undefined') {
         logger.warn('UPLOAD', 'Client ID no válido o undefined', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Client ID no válido' },
+          { success: false, message: 'Client ID no válido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -194,14 +193,14 @@ async function postHandler(
 
       if (fileCategory === 'profile' && !allowedImageTypes.includes(fileType)) {
         return NextResponse.json(
-          { success: false, message: 'Tipo de archivo no permitido para foto de perfil' },
+          { success: false, message: 'Tipo de archivo no permitido para foto de perfil', code: 'VALIDATION'},
           { status: 400 }
         );
       }
 
       if (fileCategory === 'document' && !allowedDocumentTypes.includes(fileType)) {
         return NextResponse.json(
-          { success: false, message: 'Tipo de archivo no permitido para documentos' },
+          { success: false, message: 'Tipo de archivo no permitido para documentos', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -210,7 +209,7 @@ async function postHandler(
       const maxSize = 5 * 1024 * 1024;
       if (fileSize > maxSize) {
         return NextResponse.json(
-          { success: false, message: 'El archivo es demasiado grande (máximo 5MB)' },
+          { success: false, message: 'El archivo es demasiado grande (máximo 5MB)', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -253,8 +252,7 @@ async function postHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -289,7 +287,7 @@ async function putHandler(
 
       if (!client) {
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -415,7 +413,7 @@ async function putHandler(
 
       if (result.modifiedCount === 0) {
         return NextResponse.json(
-          { success: false, message: 'No se pudo guardar la referencia del archivo' },
+          { success: false, message: 'No se pudo guardar la referencia del archivo', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -466,8 +464,7 @@ async function putHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -498,14 +495,14 @@ async function deleteHandler(
       // Validaciones...
       if (!id || id === 'undefined') {
         return NextResponse.json(
-          { success: false, message: 'Client ID no válido' },
+          { success: false, message: 'Client ID no válido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
 
       if (!fileKey) {
         return NextResponse.json(
-          { success: false, message: 'fileKey es requerido' },
+          { success: false, message: 'fileKey es requerido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -516,7 +513,7 @@ async function deleteHandler(
       if (!client) {
         logger.warn('UPLOAD', 'Cliente no encontrado', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -702,7 +699,7 @@ async function deleteHandler(
       if (!dbSuccess) {
         logger.error('UPLOAD', '❌ Falló eliminación en base de datos', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'No se pudo eliminar la referencia del documento' },
+          { success: false, message: 'No se pudo eliminar la referencia del documento', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -741,8 +738,7 @@ async function deleteHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -774,7 +770,7 @@ async function patchHandler(
     }
     
     return NextResponse.json(
-      { success: false, message: 'Acción no válida' },
+      { success: false, message: 'Acción no válida', code: 'VALIDATION'},
       { status: 400 }
     );
     
@@ -787,8 +783,7 @@ async function patchHandler(
       { 
         success: false, 
         message: 'Error reparando documentos',
-        ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-      },
+        ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

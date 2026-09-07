@@ -65,7 +65,7 @@ async function registerHandler(request: NextRequest) {
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
     return NextResponse.json(
-      { success: false, message: firstError?.message ?? 'Datos de registro inválidos' },
+      { success: false, message: firstError?.message ?? 'Datos de registro inválidos', code: 'VALIDATION'},
       { status: 400 },
     );
   }
@@ -109,7 +109,7 @@ async function registerHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'Ya existe una cuenta con este email' },
+      { success: false, message: 'Ya existe una cuenta con este email', code: 'CONFLICT'},
       { status: 409 },
     );
   }
@@ -135,7 +135,7 @@ async function registerHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'No puedes registrarte con el email del administrador' },
+      { success: false, message: 'No puedes registrarte con el email del administrador', code: 'FORBIDDEN'},
       { status: 403 },
     );
   }

@@ -10,13 +10,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente' }, { status: 503 });
+  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente', code: 'INTERNAL'}, { status: 503 });
 }
 
 export async function PUT(req: NextRequest) {
-  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente' }, { status: 503 });
+  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente', code: 'INTERNAL'}, { status: 503 });
 }
 
 export async function DELETE(req: NextRequest) {
-  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente' }, { status: 503 });
+  return NextResponse.json({ success: false, message: 'Upload de demos deshabilitado temporalmente', code: 'INTERNAL'}, { status: 503 });
 }

@@ -25,7 +25,7 @@ async function postHandler(request: NextRequest) {
     const coach = await Coach.findById(auth.coachId);
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -33,7 +33,7 @@ async function postHandler(request: NextRequest) {
     // Verificar que sea un coach en trial
     if (coach.trialStatus !== 'active' && coach.trialStatus !== 'expired') {
       return NextResponse.json(
-        { success: false, message: 'Esta acción solo está disponible para cuentas en período de prueba' },
+        { success: false, message: 'Esta acción solo está disponible para cuentas en período de prueba', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -82,7 +82,7 @@ async function postHandler(request: NextRequest) {
   } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -91,8 +91,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

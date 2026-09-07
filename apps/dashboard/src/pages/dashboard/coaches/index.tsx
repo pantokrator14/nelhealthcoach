@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Layout from '../../../components/dashboard/Layout';
 import Head from 'next/head';
 import { apiClient } from '@/lib/api';
+import { translateApiError } from '@/lib/apiErrorText';
+
 import Image from 'next/image';
 import { useToast } from '@/components/ui/Toast';
 
@@ -132,8 +134,7 @@ export default function CoachesPage() {
       }
       showToast(t('coaches.deleteSuccess', { firstName: coach.firstName, lastName: coach.lastName }), 'success');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t('coaches.deleteError');
-      showToast(msg, 'error');
+      showToast(translateApiError(err, t, 'coaches.deleteError'), 'error');
     } finally {
       setDeletingCoach(null);
     }

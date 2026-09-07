@@ -17,7 +17,7 @@ async function postHandler(request: NextRequest) {
 
     if (!fileName || !fileType || !fileSize) {
       return NextResponse.json(
-        { success: false, message: 'fileName, fileType y fileSize son requeridos' },
+        { success: false, message: 'fileName, fileType y fileSize son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -37,15 +37,14 @@ async function postHandler(request: NextRequest) {
     });
   } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('OTHER', 'Error generando URL de upload', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }
@@ -63,14 +62,14 @@ async function putHandler(request: NextRequest) {
 
     if (!fileKey) {
       return NextResponse.json(
-        { success: false, message: 'fileKey requerido' },
+        { success: false, message: 'fileKey requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     const coach = await Coach.findById(auth.coachId);
     if (!coach) {
-      return NextResponse.json({ success: false, message: 'Coach no encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'}, { status: 404 });
     }
 
     // Eliminar foto anterior de S3 si existe
@@ -113,15 +112,14 @@ async function putHandler(request: NextRequest) {
     });
   } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('OTHER', 'Error confirmando upload', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }

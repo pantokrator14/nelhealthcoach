@@ -8,6 +8,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // English translations
 const en = {
   common: {
+    contactSupport: 'If the error persists, contact Support at support@nelhealthcoach.com.',
     loading: 'Loading...',
     error: 'An error occurred',
     save: 'Save',
@@ -59,6 +60,8 @@ const en = {
     profile: 'Profile'
   },
   auth: {
+    resendVerificationSent: 'The verification link has been resent to your email.',
+    resendVerificationFailed: 'Could not resend the verification link. Please try again.',
     email: 'Email',
     password: 'Password',
     forgotPassword: 'Forgot password?',
@@ -117,6 +120,19 @@ const en = {
     allDocumentsExtracted: 'All documents processed successfully',
     extractionError: 'Error processing document content',
     screenshotWarning: '⚠️ One or more files appear to be very long screenshots (multiple pages in one). For better processing, we recommend uploading each page as a separate image. Would you like to upload them anyway?'
+  },
+  apiErrors: {
+    unauthorized: 'Your session has expired. Please log in again.',
+    forbidden: 'You do not have permission to perform this action.',
+    notFound: 'Not found.',
+    validation: 'Check the entered data and try again.',
+    invalidPassword: 'Incorrect password.',
+    emailNotVerified: 'Please verify your email before continuing.',
+    sessionNotDraft: 'The session must be in draft state to be regenerated.',
+    conflict: 'The operation could not be completed because of a conflict with the current state.',
+    internal: 'Something went wrong. Please try again.',
+    rateLimited: 'Too many attempts. Please wait a moment and try again.',
+    trialAlreadyUsed: 'This trial code has already been used.',
   },
   ai: {
     recommendations: 'AI Recommendations',
@@ -252,7 +268,11 @@ const en = {
     motivationTip: 'Motivational tip:',
     trackingMethod: 'Tracking method:',
     regenerationPrompt: 'Notes for regeneration (optional):',
-    errorRegenerateTimeout: 'The regeneration is taking longer than expected. Please try again.'
+    generationStillRunning: 'The AI generation is still running in the background. It may take a few more minutes.',
+    recommendationsReady: '✅ The AI recommendations for {{name}} are ready for your review.',
+    retryingTranscript: 'Retrying transcription...',
+    retryTranscriptError: 'Error retrying transcription',
+    unknownError: 'Unknown error',
   },
   recipes: {
     title: 'Recipes',
@@ -1008,12 +1028,26 @@ const en = {
     caLLCFee: 'CA LLC Annual Fee',
     caLLCFileNumber: 'CA LLC File Number',
     settingsSaved: 'Settings saved successfully',
+    receiptUploaded: 'Receipt uploaded',
+    receiptDeleted: 'Receipt deleted',
+    receiptUploadError: 'Error uploading receipt',
+    receiptDeleteError: 'Error deleting receipt',
+    reportDownloadError: 'Error downloading PDF report',
+    expenseAmountInvalid: 'Enter a valid amount',
+    expenseDescriptionRequired: 'Enter a description',
+    downloadReceipt: 'Download receipt',
+    viewReceipt: 'View receipt',
+    receiptDeleteConfirm: 'Delete this receipt?',
+    uploadReceipt: 'Upload receipt',
+    receiptRequirements: 'PDF, JPG or PNG (max. 10 MB)',
+    downloadPDF: 'Download PDF report',
   }
 };
 
 // Spanish translations
 const es = {
   common: {
+    contactSupport: 'Si el error persiste, contacta a Soporte en support@nelhealthcoach.com.',
     loading: 'Cargando...',
     error: 'Ocurrió un error',
     save: 'Guardar',
@@ -1065,6 +1099,8 @@ const es = {
     profile: 'Perfil'
   },
   auth: {
+    resendVerificationSent: 'Se ha reenviado el enlace de verificación a tu email.',
+    resendVerificationFailed: 'No se pudo reenviar la verificación. Intenta de nuevo.',
     email: 'Correo electrónico',
     password: 'Contraseña',
     forgotPassword: '¿Olvidaste tu contraseña?',
@@ -1123,6 +1159,19 @@ const es = {
     allDocumentsExtracted: 'Todos los documentos procesados exitosamente',
     extractionError: 'Error al procesar el contenido del documento',
     screenshotWarning: '⚠️ Uno o más archivos parecen ser capturas de pantalla muy largas (varias páginas en una sola). Para un mejor procesamiento, recomendamos subir cada página como una imagen separada. ¿Quieres subirlos de todas formas?'
+  },
+  apiErrors: {
+    unauthorized: 'Tu sesión expiró. Inicia sesión nuevamente.',
+    forbidden: 'No tienes permisos para realizar esta acción.',
+    notFound: 'No encontrado.',
+    validation: 'Revisa los datos ingresados e inténtalo de nuevo.',
+    invalidPassword: 'Contraseña incorrecta.',
+    emailNotVerified: 'Verifica tu email antes de continuar.',
+    sessionNotDraft: 'La sesión debe estar en estado borrador para poder regenerarse.',
+    conflict: 'No se pudo completar la operación por un conflicto con el estado actual.',
+    internal: 'Ocurrió un error. Inténtalo de nuevo.',
+    rateLimited: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
+    trialAlreadyUsed: 'Este código de prueba ya fue utilizado.',
   },
   ai: {
     recommendations: 'Recomendaciones de IA',
@@ -1258,7 +1307,11 @@ const es = {
     motivationTip: 'Consejo motivacional:',
     trackingMethod: 'Método de seguimiento:',
     regenerationPrompt: 'Notas para la regeneración (opcional):',
-    errorRegenerateTimeout: 'La regeneración está tardando más de lo esperado. Inténtalo de nuevo.'
+    generationStillRunning: 'La generación de IA sigue en curso en segundo plano. Puede tardar unos minutos más.',
+    recommendationsReady: '✅ Las recomendaciones de IA para {{name}} están listas para tu revisión.',
+    retryingTranscript: 'Reintentando transcripción...',
+    retryTranscriptError: 'Error al reintentar transcripción',
+    unknownError: 'Error desconocido',
   },
   recipes: {
     title: 'Recetas',
@@ -2014,12 +2067,26 @@ const es = {
     caLLCFee: 'CA LLC Annual Fee',
     caLLCFileNumber: 'Número de Archivo CA LLC',
     settingsSaved: 'Configuración guardada exitosamente',
+    receiptUploaded: 'Recibo subido',
+    receiptDeleted: 'Recibo eliminado',
+    receiptUploadError: 'Error al subir recibo',
+    receiptDeleteError: 'Error al eliminar recibo',
+    reportDownloadError: 'Error al descargar el informe PDF',
+    expenseAmountInvalid: 'Ingresa un monto válido',
+    expenseDescriptionRequired: 'Ingresa una descripción',
+    downloadReceipt: 'Descargar recibo',
+    viewReceipt: 'Ver recibo',
+    receiptDeleteConfirm: '¿Eliminar este recibo?',
+    uploadReceipt: 'Subir recibo',
+    receiptRequirements: 'PDF, JPG o PNG (máx. 10 MB)',
+    downloadPDF: 'Descargar informe PDF',
   }
 };
 
 // French translations
 const fr = {
   common: {
+    contactSupport: 'Si l\'erreur persiste, contactez le Support à support@nelhealthcoach.com.',
     loading: 'Chargement...',
     error: 'Une erreur est survenue',
     save: 'Enregistrer',
@@ -2071,6 +2138,8 @@ const fr = {
     profile: 'Profil'
   },
   auth: {
+    resendVerificationSent: 'Le lien de vérification a été renvoyé à votre adresse e-mail.',
+    resendVerificationFailed: 'Impossible de renvoyer le lien de vérification. Veuillez réessayer.',
     email: 'E-mail',
     password: 'Mot de passe',
     forgotPassword: 'Mot de passe oublié ?',
@@ -2117,6 +2186,19 @@ const fr = {
     allDocumentsExtracted: 'Tous les documents traités avec succès',
     extractionError: 'Erreur lors du traitement du contenu du document',
     screenshotWarning: '⚠️ Un ou plusieurs fichiers semblent être de très longues captures d\'écran (plusieurs pages en une seule). Pour un meilleur traitement, nous recommandons de télécharger chaque page comme une image séparée. Voulez-vous les télécharger quand même ?'
+  },
+  apiErrors: {
+    unauthorized: 'Votre session a expiré. Veuillez vous reconnecter.',
+    forbidden: 'Vous n\'avez pas la permission d\'effectuer cette action.',
+    notFound: 'Introuvable.',
+    validation: 'Vérifiez les données saisies et réessayez.',
+    invalidPassword: 'Mot de passe incorrect.',
+    emailNotVerified: 'Veuillez vérifier votre e-mail avant de continuer.',
+    sessionNotDraft: 'La session doit être à l\'état brouillon pour être régénérée.',
+    conflict: 'L\'opération n\'a pas pu être effectuée en raison d\'un conflit avec l\'état actuel.',
+    internal: 'Une erreur est survenue. Veuillez réessayer.',
+    rateLimited: 'Trop de tentatives. Veuillez patienter et réessayer.',
+    trialAlreadyUsed: 'Ce code d\'essai a déjà été utilisé.',
   },
   ai: {
     recommendations: 'Recommandations IA',
@@ -2252,7 +2334,11 @@ const fr = {
     sessionImportError: 'Erreur : {{error}}',
     shoppingListError: 'Impossible de générer automatiquement la liste de courses',
     regenerationPrompt: 'Notes pour la régénération (facultatif) :',
-    errorRegenerateTimeout: 'La régénération prend plus de temps que prévu. Veuillez réessayer.'
+    generationStillRunning: 'La génération IA se poursuit en arrière-plan. Elle peut encore prendre quelques minutes.',
+    recommendationsReady: '✅ Les recommandations IA pour {{name}} sont prêtes pour votre examen.',
+    retryingTranscript: 'Nouvelle tentative de transcription...',
+    retryTranscriptError: 'Erreur lors de la nouvelle tentative de transcription',
+    unknownError: 'Erreur inconnue',
   },
   recipes: {
     title: 'Recettes',
@@ -3002,6 +3088,12 @@ const fr = {
     caLLCFileNumber: 'N\u00b0 d\'Enregistrement CA LLC',
     settingsSaved: 'Param\u00e8tres enregistr\u00e9s',
     receiptUploaded: 'Re\u00e7u t\u00e9l\u00e9charg\u00e9',
+    receiptDeleted: 'Reçu supprimé',
+    receiptUploadError: 'Erreur lors du téléversement du reçu',
+    receiptDeleteError: 'Erreur lors de la suppression du reçu',
+    reportDownloadError: 'Erreur lors du téléchargement du rapport PDF',
+    expenseAmountInvalid: 'Saisissez un montant valide',
+    expenseDescriptionRequired: 'Saisissez une description',
     downloadReceipt: 'T\u00e9l\u00e9charger le re\u00e7u',
     viewReceipt: 'Voir le re\u00e7u',
     receiptDeleteConfirm: 'Supprimer ce re\u00e7u\u00a0?',
@@ -3014,6 +3106,7 @@ const fr = {
 // Italian translations
 const it = {
   common: {
+    contactSupport: 'Se l\'errore persiste, contatta il Supporto all\'indirizzo support@nelhealthcoach.com.',
     loading: 'Caricamento...',
     error: 'Si è verificato un errore',
     save: 'Salva',
@@ -3065,6 +3158,8 @@ const it = {
     profile: 'Profilo'
   },
   auth: {
+    resendVerificationSent: 'Il link di verifica è stato reinviato alla tua e-mail.',
+    resendVerificationFailed: 'Impossibile reinviare il link di verifica. Riprova.',
     email: 'E-mail',
     password: 'Password',
     forgotPassword: 'Password dimenticata?',
@@ -3111,6 +3206,19 @@ const it = {
     allDocumentsExtracted: 'Tutti i documenti elaborati con successo',
     extractionError: 'Errore durante l\'elaborazione del contenuto del documento',
     screenshotWarning: '⚠️ Uno o più file sembrano essere screenshot molto lunghi (più pagine in una). Per un\'elaborazione migliore, consigliamo di caricare ogni pagina come immagine separata. Vuoi caricarli comunque?'
+  },
+  apiErrors: {
+    unauthorized: 'La tua sessione è scaduta. Accedi di nuovo.',
+    forbidden: 'Non hai il permesso di eseguire questa azione.',
+    notFound: 'Non trovato.',
+    validation: 'Controlla i dati inseriti e riprova.',
+    invalidPassword: 'Password errata.',
+    emailNotVerified: 'Verifica la tua e-mail prima di continuare.',
+    sessionNotDraft: 'La sessione deve essere in stato bozza per essere rigenerata.',
+    conflict: 'Impossibile completare l\'operazione per un conflitto con lo stato attuale.',
+    internal: 'Si è verificato un errore. Riprova.',
+    rateLimited: 'Troppi tentativi. Attendi un momento e riprova.',
+    trialAlreadyUsed: 'Questo codice di prova è già stato utilizzato.',
   },
   ai: {
     recommendations: 'Raccomandazioni IA',
@@ -3246,7 +3354,11 @@ const it = {
     sessionImportError: 'Errore: {{error}}',
     shoppingListError: 'Impossibile generare automaticamente la lista della spesa',
     regenerationPrompt: 'Note per la rigenerazione (facoltativo):',
-    errorRegenerateTimeout: 'La rigenerazione sta richiedendo più tempo del previsto. Riprova.'
+    generationStillRunning: 'La generazione IA è ancora in corso in background. Potrebbe richiedere ancora qualche minuto.',
+    recommendationsReady: '✅ Le raccomandazioni IA per {{name}} sono pronte per la tua revisione.',
+    retryingTranscript: 'Nuovo tentativo di trascrizione...',
+    retryTranscriptError: 'Errore nel nuovo tentativo di trascrizione',
+    unknownError: 'Errore sconosciuto',
   },
   recipes: {
     title: 'Ricette',
@@ -3996,6 +4108,12 @@ const it = {
     caLLCFileNumber: 'N. Registrazione CA LLC',
     settingsSaved: 'Impostazioni salvate',
     receiptUploaded: 'Ricevuta caricata',
+    receiptDeleted: 'Ricevuta eliminata',
+    receiptUploadError: 'Errore durante il caricamento della ricevuta',
+    receiptDeleteError: 'Errore durante la eliminazione della ricevuta',
+    reportDownloadError: 'Errore durante il download del report PDF',
+    expenseAmountInvalid: 'Inserisci un importo valido',
+    expenseDescriptionRequired: 'Inserisci una descrizione',
     downloadReceipt: 'Scarica ricevuta',
     viewReceipt: 'Vedi ricevuta',
     receiptDeleteConfirm: 'Eliminare questa ricevuta?',
@@ -4008,6 +4126,7 @@ const it = {
 // Portuguese translations
 const pt = {
   common: {
+    contactSupport: 'Se o erro persistir, entre em contato com o Suporte em support@nelhealthcoach.com.',
     loading: 'Carregando...',
     error: 'Ocorreu um erro',
     save: 'Salvar',
@@ -4059,6 +4178,8 @@ const pt = {
     profile: 'Perfil'
   },
   auth: {
+    resendVerificationSent: 'O link de verificação foi reenviado para o seu e-mail.',
+    resendVerificationFailed: 'Não foi possível reenviar o link de verificação. Tente novamente.',
     email: 'E-mail',
     password: 'Senha',
     forgotPassword: 'Esqueceu a senha?',
@@ -4105,6 +4226,19 @@ const pt = {
     allDocumentsExtracted: 'Todos os documentos processados com sucesso',
     extractionError: 'Erro ao processar o conteúdo do documento',
     screenshotWarning: '⚠️ Um ou mais arquivos parecem ser capturas de tela muito longas (várias páginas em uma). Para um melhor processamento, recomendamos enviar cada página como uma imagem separada. Deseja enviá-los mesmo assim?'
+  },
+  apiErrors: {
+    unauthorized: 'Sua sessão expirou. Entre novamente.',
+    forbidden: 'Você não tem permissão para executar esta ação.',
+    notFound: 'Não encontrado.',
+    validation: 'Verifique os dados inseridos e tente novamente.',
+    invalidPassword: 'Senha incorreta.',
+    emailNotVerified: 'Verifique seu e-mail antes de continuar.',
+    sessionNotDraft: 'A sessão deve estar no estado rascunho para ser regenerada.',
+    conflict: 'Não foi possível concluir a operação devido a um conflito com o estado atual.',
+    internal: 'Ocorreu um erro. Tente novamente.',
+    rateLimited: 'Muitas tentativas. Aguarde um momento e tente novamente.',
+    trialAlreadyUsed: 'Este código de teste já foi utilizado.',
   },
   ai: {
     recommendations: 'Recomendações de IA',
@@ -4240,7 +4374,11 @@ const pt = {
     sessionImportError: 'Erro: {{error}}',
     shoppingListError: 'Não foi possível gerar a lista de compras automaticamente',
     regenerationPrompt: 'Notas para a regeneração (opcional):',
-    errorRegenerateTimeout: 'A regeneração está demorando mais do que o esperado. Tente novamente.'
+    generationStillRunning: 'A geração de IA continua em andamento em segundo plano. Pode levar mais alguns minutos.',
+    recommendationsReady: '✅ As recomendações de IA para {{name}} estão prontas para sua revisão.',
+    retryingTranscript: 'Tentando a transcrição novamente...',
+    retryTranscriptError: 'Errore al tentar a transcrição novamente',
+    unknownError: 'Errore desconhecido',
   },
   recipes: {
     title: 'Receitas',
@@ -4990,6 +5128,12 @@ const pt = {
     caLLCFileNumber: 'N. Registro CA LLC',
     settingsSaved: 'Configura\u00e7\u00f5es salvas',
     receiptUploaded: 'Comprovante enviado',
+    receiptDeleted: 'Recibo excluído',
+    receiptUploadError: 'Erro ao enviar o recibo',
+    receiptDeleteError: 'Erro ao excluir o recibo',
+    reportDownloadError: 'Erro ao baixar o relatório PDF',
+    expenseAmountInvalid: 'Insira um valor válido',
+    expenseDescriptionRequired: 'Insira uma descrição',
     downloadReceipt: 'Baixar comprovante',
     viewReceipt: 'Ver comprovante',
     receiptDeleteConfirm: 'Excluir este comprovante?',
@@ -5002,6 +5146,7 @@ const pt = {
 // German translations
 const de = {
   common: {
+    contactSupport: 'Wenn der Fehler weiterhin auftritt, kontaktiere den Support unter support@nelhealthcoach.com.',
     loading: 'Laden...',
     error: 'Ein Fehler ist aufgetreten',
     save: 'Speichern',
@@ -5053,6 +5198,8 @@ const de = {
     profile: 'Profil'
   },
   auth: {
+    resendVerificationSent: 'Der Bestätigungslink wurde erneut an deine E-Mail gesendet.',
+    resendVerificationFailed: 'Der Bestätigungslink konnte nicht erneut gesendet werden. Bitte versuche es erneut.',
     email: 'E-Mail',
     password: 'Passwort',
     forgotPassword: 'Passwort vergessen?',
@@ -5099,6 +5246,19 @@ const de = {
     allDocumentsExtracted: 'Alle Dokumente erfolgreich verarbeitet',
     extractionError: 'Fehler bei der Verarbeitung des Dokumentinhalts',
     screenshotWarning: '⚠️ Eine oder mehrere Dateien scheinen sehr lange Screenshots zu sein (mehrere Seiten in einer). Für eine bessere Verarbeitung empfehlen wir, jede Seite als separates Bild hochzuladen. Möchten Sie sie trotzdem hochladen?'
+  },
+  apiErrors: {
+    unauthorized: 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
+    forbidden: 'Du hast keine Berechtigung für diese Aktion.',
+    notFound: 'Nicht gefunden.',
+    validation: 'Überprüfe die eingegebenen Daten und versuche es erneut.',
+    invalidPassword: 'Falsches Passwort.',
+    emailNotVerified: 'Bitte verifiziere zuerst deine E-Mail.',
+    sessionNotDraft: 'Die Sitzung muss sich im Entwurfsstatus befinden, um neu generiert zu werden.',
+    conflict: 'Der Vorgang konnte wegen eines Konflikts mit dem aktuellen Status nicht abgeschlossen werden.',
+    internal: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
+    rateLimited: 'Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.',
+    trialAlreadyUsed: 'Dieser Testcode wurde bereits verwendet.',
   },
   ai: {
     recommendations: 'KI-Empfehlungen',
@@ -5234,7 +5394,11 @@ const de = {
     sessionImportError: 'Fehler: {{error}}',
     shoppingListError: 'Einkaufsliste konnte nicht automatisch generiert werden',
     regenerationPrompt: 'Notizen für die Neugenerierung (optional):',
-    errorRegenerateTimeout: 'Die Neugenerierung dauert länger als erwartet. Bitte erneut versuchen.'
+    generationStillRunning: 'Die KI-Generierung läuft im Hintergrund weiter. Es kann noch einige Minuten dauern.',
+    recommendationsReady: '✅ Die KI-Empfehlungen für {{name}} sind bereit für deine Überprüfung.',
+    retryingTranscript: 'Transkription wird erneut versucht...',
+    retryTranscriptError: 'Fehler beim erneuten Versuch der Transkription',
+    unknownError: 'Unbekannter Fehler',
   },
   recipes: {
     title: 'Rezepte',
@@ -5984,6 +6148,12 @@ const de = {
     caLLCFileNumber: 'CA LLC-Registrierungsnr.',
     settingsSaved: 'Einstellungen gespeichert',
     receiptUploaded: 'Beleg hochgeladen',
+    receiptDeleted: 'Beleg gelöscht',
+    receiptUploadError: 'Fehler beim Hochladen des Belegs',
+    receiptDeleteError: 'Fehler beim Löschen des Belegs',
+    reportDownloadError: 'Fehler beim Herunterladen des PDF-Berichts',
+    expenseAmountInvalid: 'Gib einen gültigen Betrag ein',
+    expenseDescriptionRequired: 'Gib eine Beschreibung ein',
     downloadReceipt: 'Beleg herunterladen',
     viewReceipt: 'Beleg anzeigen',
     receiptDeleteConfirm: 'Diesen Beleg l\u00f6schen?',

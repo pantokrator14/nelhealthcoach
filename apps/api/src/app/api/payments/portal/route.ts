@@ -23,7 +23,7 @@ async function postHandler(request: NextRequest) {
     const authResult = requireCoachAuth(request);
     if (!authResult) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -35,7 +35,7 @@ async function postHandler(request: NextRequest) {
 
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -54,7 +54,7 @@ async function postHandler(request: NextRequest) {
 
     if (!stripeCustomerId) {
       return NextResponse.json(
-        { success: false, message: 'No tienes una suscripción activa de Stripe' },
+        { success: false, message: 'No tienes una suscripción activa de Stripe', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -86,8 +86,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al abrir el portal de facturación',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

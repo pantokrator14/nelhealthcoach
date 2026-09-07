@@ -30,7 +30,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
 
     if (!body.role) {
       return NextResponse.json(
-        { success: false, message: 'role es requerido' },
+        { success: false, message: 'role es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -39,7 +39,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
       // ── Coach: autenticado con JWT del dashboard ──
       if (!body.roomName) {
         return NextResponse.json(
-          { success: false, message: 'roomName es requerido para rol coach' },
+          { success: false, message: 'roomName es requerido para rol coach', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -72,7 +72,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
       // ── Cliente: autenticado con token temporal ──
       if (!body.sessionToken) {
         return NextResponse.json(
-          { success: false, message: 'sessionToken requerido para rol client' },
+          { success: false, message: 'sessionToken requerido para rol client', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -83,14 +83,14 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
       const session = await getVideoSession(decoded.sub, decoded.sessionId);
       if (!session) {
         return NextResponse.json(
-          { success: false, message: 'Sesión no encontrada' },
+          { success: false, message: 'Sesión no encontrada', code: 'SESSION_NOT_FOUND'},
           { status: 404 }
         );
       }
 
       if (session.status === 'cancelled' || session.status === 'completed') {
         return NextResponse.json(
-          { success: false, message: `La sesión ya está ${session.status}` },
+          { success: false, message: `La sesión ya está ${session.status}`, code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -127,7 +127,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
     }
 
     return NextResponse.json(
-      { success: false, message: `Rol no soportado: ${body.role}` },
+      { success: false, message: `Rol no soportado: ${body.role}`, code: 'VALIDATION'},
       { status: 400 }
     );
   } catch (error: unknown) {
@@ -140,7 +140,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
       errorMessage.includes('client-session')
     ) {
       return NextResponse.json(
-        { success: false, message: errorMessage },
+        { success: false, message: errorMessage, code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -152,6 +152,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
         success: false,
         message: 'Error interno del servidor',
         ...(process.env.NODE_ENV === 'development' && { detail: errorMessage }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );

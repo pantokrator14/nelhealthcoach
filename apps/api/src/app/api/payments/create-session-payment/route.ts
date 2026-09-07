@@ -35,7 +35,7 @@ async function postHandler(request: NextRequest) {
 
     if (!pendingSessionId || typeof pendingSessionId !== 'string') {
       return NextResponse.json(
-        { success: false, message: 'pendingSessionId es requerido' },
+        { success: false, message: 'pendingSessionId es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -45,21 +45,21 @@ async function postHandler(request: NextRequest) {
 
     if (!pending) {
       return NextResponse.json(
-        { success: false, message: 'Sesión pendiente no encontrada' },
+        { success: false, message: 'Sesión pendiente no encontrada', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (pending.status !== 'awaiting_payment') {
       return NextResponse.json(
-        { success: false, message: 'Esta sesión ya no está pendiente de pago' },
+        { success: false, message: 'Esta sesión ya no está pendiente de pago', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (pending.expiresAt < new Date()) {
       return NextResponse.json(
-        { success: false, message: 'El tiempo para pagar esta sesión ha expirado' },
+        { success: false, message: 'El tiempo para pagar esta sesión ha expirado', code: 'VALIDATION'},
         { status: 410 }
       );
     }
@@ -68,7 +68,7 @@ async function postHandler(request: NextRequest) {
     const coach = await Coach.findById(pending.coachId);
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -176,8 +176,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al iniciar el pago',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

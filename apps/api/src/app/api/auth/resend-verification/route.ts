@@ -25,7 +25,7 @@ async function postHandler(request: NextRequest) {
 
     if (!email) {
       return NextResponse.json(
-        { success: false, message: 'Email es requerido' },
+        { success: false, message: 'Email es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -90,8 +90,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

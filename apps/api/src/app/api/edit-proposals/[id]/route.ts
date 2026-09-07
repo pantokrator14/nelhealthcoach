@@ -21,7 +21,7 @@ async function putHandler(
 
     if (auth.role !== 'admin') {
       return NextResponse.json(
-        { success: false, message: 'Solo el administrador puede aprobar o rechazar propuestas' },
+        { success: false, message: 'Solo el administrador puede aprobar o rechazar propuestas', code: 'FORBIDDEN'},
         { status: 403 }
       );
     }
@@ -39,7 +39,7 @@ async function putHandler(
 
     if (!action || !['approve', 'reject'].includes(action)) {
       return NextResponse.json(
-        { success: false, message: 'action debe ser "approve" o "reject"' },
+        { success: false, message: 'action debe ser "approve" o "reject"', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -48,14 +48,14 @@ async function putHandler(
 
     if (!proposal) {
       return NextResponse.json(
-        { success: false, message: 'Propuesta no encontrada' },
+        { success: false, message: 'Propuesta no encontrada', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (proposal.status !== 'pending') {
       return NextResponse.json(
-        { success: false, message: 'Esta propuesta ya fue procesada' },
+        { success: false, message: 'Esta propuesta ya fue procesada', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -243,19 +243,19 @@ async function putHandler(
 
     // No debería llegar aquí
     return NextResponse.json(
-      { success: false, message: 'Acción no válida' },
+      { success: false, message: 'Acción no válida', code: 'VALIDATION'},
       { status: 400 }
     );
   } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
     logger.error('OTHER', 'Error procesando propuesta', error);
     return NextResponse.json(
-      { success: false, message: 'Error interno del servidor' },
+      { success: false, message: 'Error interno del servidor', code: 'INTERNAL'},
       { status: 500 }
     );
   }

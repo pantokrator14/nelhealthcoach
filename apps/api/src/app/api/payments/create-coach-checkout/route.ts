@@ -31,14 +31,14 @@ async function postHandler(request: NextRequest) {
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
-        { success: false, message: 'El email es requerido' },
+        { success: false, message: 'El email es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (!contractAccepted) {
       return NextResponse.json(
-        { success: false, message: 'Debes aceptar el contrato para continuar' },
+        { success: false, message: 'Debes aceptar el contrato para continuar', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -54,8 +54,7 @@ async function postHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error de configuración de pagos',
-          ...(process.env.NODE_ENV === 'development' && { detail: 'STRIPE_COACH_PRICE_ID no definida en variables de entorno' })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: 'STRIPE_COACH_PRICE_ID no definida en variables de entorno' }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -116,8 +115,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al iniciar el proceso de pago',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

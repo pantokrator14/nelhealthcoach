@@ -1,3 +1,5 @@
+import { withSupportHint } from './apiErrorText';
+
 // apps/dashboard/src/lib/aiVisibleText.ts
 // Sanitización de textos visibles al usuario: los nombres de los proveedores
 // de IA (Gemini, DeepSeek) NO deben aparecer en ninguna parte de la interfaz.
@@ -34,33 +36,35 @@ export const translateGenerationError = (
   t: TFunction
 ): string => {
   const m = message.toLowerCase();
+  let key = 'ai.generationErrorGeneric';
 
   // FASE 1/2/3: el LLM devolvió vacío o JSON no parseable (modelo reasoner
   // que agotó el presupuesto de tokens razonando — fallo transitorio)
   if (/fase 1|fase 2|fase 3/.test(m) && /json|parseable|vac[ií]o|0 chars/.test(m)) {
-    return t('ai.generationErrorLlmEmpty');
+    key = 'ai.generationErrorLlmEmpty';
   }
   // El modelo no extrajo las tablas de biomarcadores
-  if (/no extrajo las tablas|biomarcadores/.test(m)) {
-    return t('ai.generationErrorMedicalTables');
+  else if (/no extrajo las tablas|biomarcadores/.test(m)) {
+    key = 'ai.generationErrorMedicalTables';
   }
   // Documento no analizado (503/404 del proveedor)
-  if (/fall[oó] el an[aá]lisis de|documento sin an[aá]lisis/.test(m)) {
-    return t('ai.generationErrorDocument');
+  else if (/fall[oó] el an[aá]lisis de|documento sin an[aá]lisis/.test(m)) {
+    key = 'ai.generationErrorDocument';
   }
   // Sesión no está en draft (regen)
-  if (/solo se pueden regenerar sesiones en estado/.test(m)) {
-    return t('ai.generationErrorNotDraft');
+  else if (/solo se pueden regenerar sesiones en estado/.test(m)) {
+    key = 'ai.generationErrorNotDraft';
   }
   // DeepSeek devolvió respuesta vacía (análisis de documento)
-  if (/respuesta vac[ií]a|deepseek devolvi[oó] respuesta/.test(m)) {
-    return t('ai.generationErrorLlmEmpty');
+  else if (/respuesta vac[ií]a|deepseek devolvi[oó] respuesta/.test(m)) {
+    key = 'ai.generationErrorLlmEmpty';
   }
   // Timeout de conexión con MongoDB
-  if (/server selection timed out|mongodb/.test(m)) {
-    return t('ai.generationErrorDbTimeout');
+  else if (/server selection timed out|mongodb/.test(m)) {
+    key = 'ai.generationErrorDbTimeout';
   }
 
-  // Desconocido → mensaje genérico (sin exponer detalle técnico)
-  return t('ai.generationErrorGeneric');
+  // Desconocido → mensaje genérico (sin exponer detalle técnico).
+  // Todo error visible se completa con el aviso de contacto a Soporte.
+  return withSupportHint(t(key), t);
 };

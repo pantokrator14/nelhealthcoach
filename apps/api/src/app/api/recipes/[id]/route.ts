@@ -24,7 +24,7 @@ async function getHandler(
       
       if (!recipe) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -74,8 +74,7 @@ async function getHandler(
         { 
           success: false, 
           message: 'Error obteniendo receta',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -108,7 +107,7 @@ async function putHandler(
       
       if (!currentRecipe) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -256,7 +255,7 @@ async function putHandler(
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -298,7 +297,7 @@ async function putHandler(
       
       if (!result) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -359,8 +358,7 @@ async function putHandler(
         { 
           success: false, 
           message: 'Error actualizando receta',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -381,14 +379,14 @@ async function deleteHandler(
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
 
       if (auth.role !== 'admin') {
         return NextResponse.json(
-          { success: false, message: 'Solo administradores pueden eliminar recetas' },
+          { success: false, message: 'Solo administradores pueden eliminar recetas', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -410,7 +408,7 @@ async function deleteHandler(
       
       if (!recipe) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -442,7 +440,7 @@ async function deleteHandler(
       
       if (result.deletedCount === 0) {
         return NextResponse.json(
-          { success: false, message: 'Receta no encontrada' },
+          { success: false, message: 'Receta no encontrada', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -469,8 +467,7 @@ async function deleteHandler(
         { 
           success: false, 
           message: 'Error eliminando receta',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }

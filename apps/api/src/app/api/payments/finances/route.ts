@@ -26,7 +26,7 @@ async function getHandler(request: NextRequest) {
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -48,7 +48,7 @@ async function getHandler(request: NextRequest) {
     // ─── Obtener coach ───
     const coach = await Coach.findById(coachId).lean() as Record<string, unknown> | null;
     if (!coach) {
-      return NextResponse.json({ success: false, message: 'Coach no encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'}, { status: 404 });
     }
 
     // ─── Precio por sesión ───
@@ -382,8 +382,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al obtener datos financieros',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

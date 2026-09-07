@@ -116,8 +116,7 @@ async function getHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -151,6 +150,7 @@ async function postHandler(request: NextRequest) {
               field: i.path.join('.'),
               message: i.message,
             })),
+            code: 'VALIDATION',
           },
           { status: 400 },
         );
@@ -272,8 +272,7 @@ async function postHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -291,7 +290,7 @@ async function putHandler(request: NextRequest) {
 
       if (!id) {
         return NextResponse.json(
-          { success: false, message: 'ID requerido' },
+          { success: false, message: 'ID requerido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -337,7 +336,7 @@ async function putHandler(request: NextRequest) {
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -378,7 +377,7 @@ async function putHandler(request: NextRequest) {
 
       if (result.matchedCount === 0) {
         return NextResponse.json(
-          { success: false, message: 'Ejercicio no encontrado' },
+          { success: false, message: 'Ejercicio no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -390,8 +389,7 @@ async function putHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -410,14 +408,14 @@ async function deleteHandler(request: NextRequest) {
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
 
       if (auth.role !== 'admin') {
         return NextResponse.json(
-          { success: false, message: 'Solo administradores pueden eliminar ejercicios' },
+          { success: false, message: 'Solo administradores pueden eliminar ejercicios', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -427,7 +425,7 @@ async function deleteHandler(request: NextRequest) {
 
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return NextResponse.json(
-          { success: false, message: 'IDs requeridos' },
+          { success: false, message: 'IDs requeridos', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -482,8 +480,7 @@ async function deleteHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }

@@ -42,7 +42,7 @@ async function getHandler(request: NextRequest) {
     const coach = await Coach.findById(auth.coachId).select('-passwordHash -verificationToken -resetToken -resetTokenExpiry');
 
     if (!coach) {
-      return NextResponse.json({ success: false, message: 'Coach no encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'}, { status: 404 });
     }
 
     // Determinar estado de Stripe Connect
@@ -109,15 +109,14 @@ async function getHandler(request: NextRequest) {
     // SEC: requireCoachAuth lanza error estructurado { status: 401 }
     const structured = error as { status?: number; message?: string };
     if (structured?.status === 401 || (error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('AUTH', 'Error obteniendo perfil', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }
@@ -134,18 +133,18 @@ async function postHandler(request: NextRequest) {
 
     const coach = await Coach.findById(auth.coachId);
     if (!coach) {
-      return NextResponse.json({ success: false, message: 'Coach no encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'}, { status: 404 });
     }
 
     switch (action) {
       case 'verify-password': {
         const { currentPassword } = body;
         if (!currentPassword) {
-          return NextResponse.json({ success: false, message: 'Ingresa tu contraseña actual' }, { status: 400 });
+          return NextResponse.json({ success: false, message: 'Ingresa tu contraseña actual', code: 'VALIDATION'}, { status: 400 });
         }
         const isMatch = await bcrypt.compare(currentPassword, coach.passwordHash);
         if (!isMatch) {
-          return NextResponse.json({ success: false, message: 'Contraseña incorrecta' }, { status: 401 });
+          return NextResponse.json({ success: false, message: 'Contraseña incorrecta', code: 'INVALID_PASSWORD'}, { status: 401 });
         }
         return NextResponse.json({ success: true, message: 'Contraseña verificada' });
       }
@@ -160,11 +159,11 @@ async function postHandler(request: NextRequest) {
       case 'delete': {
         const { currentPassword } = body;
         if (!currentPassword) {
-          return NextResponse.json({ success: false, message: 'Ingresa tu contraseña para confirmar' }, { status: 400 });
+          return NextResponse.json({ success: false, message: 'Ingresa tu contraseña para confirmar', code: 'VALIDATION'}, { status: 400 });
         }
         const isMatch = await bcrypt.compare(currentPassword, coach.passwordHash);
         if (!isMatch) {
-          return NextResponse.json({ success: false, message: 'Contraseña incorrecta' }, { status: 401 });
+          return NextResponse.json({ success: false, message: 'Contraseña incorrecta', code: 'INVALID_PASSWORD'}, { status: 401 });
         }
         await Coach.findByIdAndDelete(auth.coachId);
         logger.info('ACCOUNT', `Coach eliminó su cuenta: ${coach.email}`);
@@ -172,22 +171,21 @@ async function postHandler(request: NextRequest) {
       }
 
       default:
-        return NextResponse.json({ success: false, message: `Acción desconocida: ${action}` }, { status: 400 });
+        return NextResponse.json({ success: false, message: `Acción desconocida: ${action}`, code: 'VALIDATION'}, { status: 400 });
     }
   } catch (error: unknown) {
     // SEC: requireCoachAuth lanza error estructurado { status: 401 } — reconocer
     // ambos patrones (estructurado y legacy con 'Token' en el mensaje)
     const structured = error as { status?: number; message?: string };
     if (structured?.status === 401 || (error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('ACCOUNT', 'Error en gestión de cuenta', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }
@@ -203,7 +201,7 @@ async function putHandler(request: NextRequest) {
 
     const coach = await Coach.findById(auth.coachId);
     if (!coach) {
-      return NextResponse.json({ success: false, message: 'Coach no encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'}, { status: 404 });
     }
 
     if (body.firstName !== undefined) coach.firstName = encrypt(body.firstName.trim());
@@ -266,15 +264,14 @@ async function putHandler(request: NextRequest) {
     // ambos patrones (estructurado y legacy con 'Token' en el mensaje)
     const structured = error as { status?: number; message?: string };
     if (structured?.status === 401 || (error as Error).message?.includes('Token')) {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
     logger.error('AUTH', 'Error actualizando perfil', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      }, 
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'}, 
       { status: 500 }
     );
   }

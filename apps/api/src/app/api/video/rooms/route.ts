@@ -38,14 +38,14 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
 
     if (!body.clientId || !body.scheduledAt) {
       return NextResponse.json(
-        { success: false, message: 'clientId y scheduledAt son requeridos' },
+        { success: false, message: 'clientId y scheduledAt son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (!body.clientName || !body.clientEmail) {
       return NextResponse.json(
-        { success: false, message: 'clientName y clientEmail son requeridos' },
+        { success: false, message: 'clientName y clientEmail son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -54,14 +54,14 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
     const scheduledDate = new Date(body.scheduledAt);
     if (isNaN(scheduledDate.getTime())) {
       return NextResponse.json(
-        { success: false, message: 'Fecha inválida' },
+        { success: false, message: 'Fecha inválida', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (scheduledDate < new Date()) {
       return NextResponse.json(
-        { success: false, message: 'La fecha debe ser futura' },
+        { success: false, message: 'La fecha debe ser futura', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -79,6 +79,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
           success: false,
           message: 'Ya hay una solicitud de sesión pendiente de pago para este cliente',
           pendingSessionId: existingPending._id.toString(),
+          code: 'CONFLICT',
         },
         { status: 409 }
       );
@@ -186,7 +187,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
 
     if (errorMessage.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -198,6 +199,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
         success: false,
         message: 'Error interno del servidor',
         ...(process.env.NODE_ENV === 'development' && { detail: errorMessage }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );
@@ -241,6 +243,7 @@ async function getHandler(request: NextRequest): Promise<NextResponse> {
         success: false,
         message: 'Error interno del servidor',
         ...(process.env.NODE_ENV === 'development' && { detail: errorMessage }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );

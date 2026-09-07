@@ -43,7 +43,7 @@ async function completeRegistrationHandler(request: NextRequest) {
 
   if (!token || typeof token !== 'string') {
     return NextResponse.json(
-      { success: false, message: 'Token de registro requerido' },
+      { success: false, message: 'Token de registro requerido', code: 'VALIDATION'},
       { status: 400 },
     );
   }
@@ -53,7 +53,7 @@ async function completeRegistrationHandler(request: NextRequest) {
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
     return NextResponse.json(
-      { success: false, message: firstError?.message ?? 'Datos de registro inválidos' },
+      { success: false, message: firstError?.message ?? 'Datos de registro inválidos', code: 'VALIDATION'},
       { status: 400 },
     );
   }
@@ -86,21 +86,21 @@ async function completeRegistrationHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'Token inválido o expirado. Por favor, regístrate nuevamente.' },
+      { success: false, message: 'Token inválido o expirado. Por favor, regístrate nuevamente.', code: 'NOT_FOUND'},
       { status: 404 },
     );
   }
 
   if (pending.paymentStatus !== 'completed') {
     return NextResponse.json(
-      { success: false, message: 'El pago de la suscripción no ha sido completado' },
+      { success: false, message: 'El pago de la suscripción no ha sido completado', code: 'VALIDATION'},
       { status: 402 },
     );
   }
 
   if (pending.expiresAt < new Date()) {
     return NextResponse.json(
-      { success: false, message: 'El tiempo para completar el registro ha expirado. Regístrate nuevamente.' },
+      { success: false, message: 'El tiempo para completar el registro ha expirado. Regístrate nuevamente.', code: 'VALIDATION'},
       { status: 410 },
     );
   }
@@ -108,7 +108,7 @@ async function completeRegistrationHandler(request: NextRequest) {
   // Verificar que el email coincida con el del pending
   if (pending.email !== validEmail.toLowerCase().trim()) {
     return NextResponse.json(
-      { success: false, message: 'El email debe coincidir con el usado en el pago' },
+      { success: false, message: 'El email debe coincidir con el usado en el pago', code: 'VALIDATION'},
       { status: 400 },
     );
   }
@@ -132,7 +132,7 @@ async function completeRegistrationHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'Ya existe una cuenta con este email' },
+      { success: false, message: 'Ya existe una cuenta con este email', code: 'CONFLICT'},
       { status: 409 },
     );
   }
@@ -179,7 +179,7 @@ async function completeRegistrationHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'No puedes registrarte con el email del administrador' },
+      { success: false, message: 'No puedes registrarte con el email del administrador', code: 'FORBIDDEN'},
       { status: 403 },
     );
   }

@@ -36,7 +36,11 @@ async function loginHandler(request: NextRequest) {
       requestId: request.headers.get('x-request-id') || undefined,
     });
     return NextResponse.json(
-      { success: false, message: rateResult.message || 'Demasiados intentos. Intenta más tarde.' },
+      {
+        success: false,
+        message: rateResult.message || 'Demasiados intentos. Intenta más tarde.',
+        code: rateResult.statusCode === 503 ? 'INTERNAL' : 'RATE_LIMITED',
+      },
       // Usar el statusCode real del rate limiter: 429 (rate limit normal) o
       // 503 (fail-closed SEC-13: MongoDB no disponible) para que el frontend
       // pueda distinguir y avisar al usuario con un toast.
@@ -52,6 +56,7 @@ async function loginHandler(request: NextRequest) {
       {
         success: false,
         message: firstError?.message ?? 'Email o contraseña inválidos',
+        code: 'VALIDATION',
       },
       { status: 400 },
     );
@@ -149,7 +154,7 @@ async function loginHandler(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { success: false, message: 'Cuenta desactivada. Contacta al administrador.' },
+        { success: false, message: 'Cuenta desactivada. Contacta al administrador.', code: 'FORBIDDEN'},
         { status: 403 },
       );
     }
@@ -222,7 +227,7 @@ async function loginHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'Credenciales inválidas' },
+      { success: false, message: 'Credenciales inválidas', code: 'UNAUTHORIZED'},
       { status: 401 },
     );
   }
@@ -245,7 +250,7 @@ async function loginHandler(request: NextRequest) {
   });
 
   return NextResponse.json(
-    { success: false, message: 'Credenciales inválidas' },
+    { success: false, message: 'Credenciales inválidas', code: 'UNAUTHORIZED'},
     { status: 401 },
   );
 }

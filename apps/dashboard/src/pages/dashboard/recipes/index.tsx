@@ -7,6 +7,8 @@ import RecipeDetailModal from '../../../components/dashboard/RecipeDetailModal';
 import RecipeFilters, { FilterState, SortOption } from '../../../components/dashboard/RecipeFilters';
 import { useToast } from '../../../components/ui/Toast';
 import { apiClient } from '../../../lib/api';
+import { translateApiError } from '@/lib/apiErrorText';
+
 import { Recipe } from '../../../../../../packages/types/src/recipe-types';
 import { useTranslation } from 'react-i18next';
 
@@ -118,7 +120,7 @@ const RecipesPage = () => {
       loadProposals();
       loadRecipes();
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : t('recipes.errorApproving'), 'error');
+      showToast(translateApiError(err, t, 'recipes.errorApproving'), 'error');
     }
   };
 
@@ -128,7 +130,7 @@ const RecipesPage = () => {
       showToast(t('recipes.proposalRejected'), 'success');
       loadProposals();
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : t('recipes.errorRejecting'), 'error');
+      showToast(translateApiError(err, t, 'recipes.errorRejecting'), 'error');
     }
   };
 
@@ -286,9 +288,7 @@ const RecipesPage = () => {
         setDeleteMode(false);
         setSelectedRecipes([]);
       } catch (err: unknown) {
-        console.error('Error deleting recipes:', err);
-        const errorMessage = err instanceof Error ? err.message : t('recipes.errorDeleting');
-        showToast(errorMessage, 'error');
+        showToast(translateApiError(err, t, 'recipes.errorDeleting'), 'error');
       }
   };
 
@@ -323,9 +323,7 @@ const RecipesPage = () => {
         setIsDetailModalOpen(false);
         setSelectedRecipe(null);
       } catch (err: unknown) {
-        console.error('Error deleting recipe:', err);
-        const errorMessage = err instanceof Error ? err.message : t('recipes.errorDeleting');
-        showToast(errorMessage, 'error');
+        showToast(translateApiError(err, t, 'recipes.errorDeleting'), 'error');
       }
   };
 

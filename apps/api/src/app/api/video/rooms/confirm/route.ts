@@ -33,7 +33,7 @@ async function postHandler(request: NextRequest) {
 
     if (!pendingSessionId) {
       return NextResponse.json(
-        { success: false, message: 'pendingSessionId es requerido' },
+        { success: false, message: 'pendingSessionId es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -42,14 +42,14 @@ async function postHandler(request: NextRequest) {
 
     if (!pending) {
       return NextResponse.json(
-        { success: false, message: 'Sesión pendiente no encontrada' },
+        { success: false, message: 'Sesión pendiente no encontrada', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (pending.status !== 'paid') {
       return NextResponse.json(
-        { success: false, message: 'El pago de esta sesión no ha sido confirmado' },
+        { success: false, message: 'El pago de esta sesión no ha sido confirmado', code: 'VALIDATION'},
         { status: 402 }
       );
     }
@@ -60,7 +60,7 @@ async function postHandler(request: NextRequest) {
         { $set: { status: 'cancelled' } }
       );
       return NextResponse.json(
-        { success: false, message: 'La fecha propuesta ya pasó. Crea una nueva solicitud.' },
+        { success: false, message: 'La fecha propuesta ya pasó. Crea una nueva solicitud.', code: 'VALIDATION'},
         { status: 410 }
       );
     }
@@ -184,7 +184,7 @@ async function postHandler(request: NextRequest) {
 
     if (errorMessage.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -195,6 +195,7 @@ async function postHandler(request: NextRequest) {
         success: false,
         message: 'Error interno del servidor',
         ...(process.env.NODE_ENV === 'development' && { detail: errorMessage }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );

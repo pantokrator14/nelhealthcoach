@@ -54,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!authHeader || !liveKitSecret) {
       logger.warn('VIDEO', 'Webhook sin Authorization o LIVEKIT_API_SECRET no configurado');
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch {
       logger.warn('VIDEO', 'Webhook con token inválido');
       return NextResponse.json(
-        { success: false, message: 'Token inválido' },
+        { success: false, message: 'Token inválido', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }

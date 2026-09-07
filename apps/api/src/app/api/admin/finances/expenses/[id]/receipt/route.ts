@@ -39,7 +39,7 @@ async function postHandler(
 
     if (!body.fileName || !body.fileType || !body.fileSize) {
       return NextResponse.json(
-        { success: false, message: 'fileName, fileType y fileSize son requeridos' },
+        { success: false, message: 'fileName, fileType y fileSize son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -51,7 +51,7 @@ async function postHandler(
     ];
     if (!allowedTypes.includes(body.fileType)) {
       return NextResponse.json(
-        { success: false, message: 'Solo se permiten archivos PDF, JPG, PNG, GIF o WebP' },
+        { success: false, message: 'Solo se permiten archivos PDF, JPG, PNG, GIF o WebP', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -60,7 +60,7 @@ async function postHandler(
     const maxSize = 10 * 1024 * 1024;
     if (body.fileSize > maxSize) {
       return NextResponse.json(
-        { success: false, message: 'El archivo es demasiado grande (máximo 10MB)' },
+        { success: false, message: 'El archivo es demasiado grande (máximo 10MB)', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -100,8 +100,7 @@ async function postHandler(
       { 
         success: false, 
         message: 'Error al generar URL de upload',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -122,14 +121,14 @@ async function putHandler(
     const existing = await BusinessTransaction.findById(id);
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: 'Gasto no encontrado' },
+        { success: false, message: 'Gasto no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (existing.source !== 'manual') {
       return NextResponse.json(
-        { success: false, message: 'No se puede modificar una transacción automática' },
+        { success: false, message: 'No se puede modificar una transacción automática', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -143,7 +142,7 @@ async function putHandler(
 
     if (!body.s3Key) {
       return NextResponse.json(
-        { success: false, message: 's3Key es requerido' },
+        { success: false, message: 's3Key es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -203,8 +202,7 @@ async function putHandler(
       { 
         success: false, 
         message: 'Error al guardar el recibo',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -225,14 +223,14 @@ async function deleteHandler(
     const existing = await BusinessTransaction.findById(id);
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: 'Gasto no encontrado' },
+        { success: false, message: 'Gasto no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (existing.source !== 'manual') {
       return NextResponse.json(
-        { success: false, message: 'No se puede modificar una transacción automática' },
+        { success: false, message: 'No se puede modificar una transacción automática', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -241,7 +239,7 @@ async function deleteHandler(
 
     if (!receiptFile?.s3Key) {
       return NextResponse.json(
-        { success: false, message: 'Este gasto no tiene recibo' },
+        { success: false, message: 'Este gasto no tiene recibo', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -285,8 +283,7 @@ async function deleteHandler(
       { 
         success: false, 
         message: 'Error al eliminar el recibo',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
