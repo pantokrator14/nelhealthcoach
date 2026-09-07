@@ -217,8 +217,7 @@ async function getHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -270,7 +269,7 @@ async function postHandler(request: NextRequest) {
           isFree,
         });
         return NextResponse.json(
-          { success: false, message: 'Acción no autorizada. El enlace gratuito solo es válido con un coach administrador.' },
+          { success: false, message: 'Acción no autorizada. El enlace gratuito solo es válido con un coach administrador.', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -283,7 +282,7 @@ async function postHandler(request: NextRequest) {
           coachId,
         });
         return NextResponse.json(
-          { success: false, message: 'Acción no autorizada. El enlace gratuito solo puede ser generado por un administrador.' },
+          { success: false, message: 'Acción no autorizada. El enlace gratuito solo puede ser generado por un administrador.', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -295,7 +294,7 @@ async function postHandler(request: NextRequest) {
           hasCoachId: !!coachId,
         });
         return NextResponse.json(
-          { success: false, message: 'No se puede completar el registro sin un pago válido.' },
+          { success: false, message: 'No se puede completar el registro sin un pago válido.', code: 'VALIDATION'},
           { status: 402 }
         );
       }
@@ -311,7 +310,7 @@ async function postHandler(request: NextRequest) {
             paymentStatus: session.payment_status,
           });
           return NextResponse.json(
-            { success: false, message: 'El pago no fue completado. Por favor intenta de nuevo.' },
+            { success: false, message: 'El pago no fue completado. Por favor intenta de nuevo.', code: 'VALIDATION'},
             { status: 402 }
           );
         }
@@ -324,7 +323,7 @@ async function postHandler(request: NextRequest) {
           stripeSessionId,
         });
         return NextResponse.json(
-          { success: false, message: 'Error verificando el pago. Contacta a soporte.' },
+          { success: false, message: 'Error verificando el pago. Contacta a soporte.', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -357,6 +356,7 @@ async function postHandler(request: NextRequest) {
             field: i.path.join('.'),
             message: i.message,
           })),
+          code: 'VALIDATION',
         },
         { status: 400 },
       );
@@ -595,8 +595,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor al registrar el cliente',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

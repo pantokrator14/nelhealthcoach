@@ -31,7 +31,7 @@ async function postHandler(request: NextRequest) {
 
     if (!reportType || !['schedule_c', 'form_568', 'quarterly'].includes(reportType)) {
       return NextResponse.json(
-        { success: false, message: 'Tipo de reporte inválido. Use: schedule_c, form_568, quarterly' },
+        { success: false, message: 'Tipo de reporte inválido. Use: schedule_c, form_568, quarterly', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -45,7 +45,7 @@ async function postHandler(request: NextRequest) {
         return await generateQuarterlyTax(year);
       default:
         return NextResponse.json(
-          { success: false, message: 'Tipo de reporte no implementado' },
+          { success: false, message: 'Tipo de reporte no implementado', code: 'VALIDATION'},
           { status: 400 }
         );
     }
@@ -62,8 +62,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al generar reporte fiscal',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

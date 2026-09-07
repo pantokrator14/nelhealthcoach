@@ -12,7 +12,7 @@ async function getHandler(request: NextRequest) {
       const auth = requireCoachAuth(request);
       if (auth.role !== 'admin') {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }

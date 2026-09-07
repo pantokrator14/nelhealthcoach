@@ -21,7 +21,7 @@ async function postHandler(request: NextRequest) {
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -32,14 +32,14 @@ async function postHandler(request: NextRequest) {
 
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
 
     if (!coach.stripeConnectAccountId) {
       return NextResponse.json(
-        { success: false, message: 'Primero debes crear una cuenta de Stripe' },
+        { success: false, message: 'Primero debes crear una cuenta de Stripe', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -69,8 +69,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al generar enlace de configuración',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

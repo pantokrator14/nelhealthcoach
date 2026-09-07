@@ -71,6 +71,21 @@ export interface ExerciseFormData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+/**
+ * Crea un Error a partir del payload de error de la API adjuntando el `code`
+ * para que translateApiError() pueda mostrar el mensaje localizado correcto.
+ * El message crudo (español técnico) nunca debe mostrarse directo al usuario.
+ */
+function apiError(
+  payload: { message?: string; code?: string } | null | undefined,
+  fallback: string
+): Error {
+  const err = new Error(payload?.message || fallback);
+  (err as Error & { code?: string }).code = payload?.code;
+  return err;
+}
+
+
 interface CreateChecklistItemData {
   weekNumber: number;
   category: 'nutrition' | 'exercise' | 'habit' | 'medical' | 'supplement';
@@ -251,7 +266,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error en el login');
+      throw apiError(errorData, 'Error en el login');
     }
 
     return response.json();
@@ -268,7 +283,7 @@ export const apiClient = {
         window.location.href = '/login';
       }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar clientes');
+      throw apiError(errorData, 'Error al cargar clientes');
     }
     return response.json();
   },
@@ -284,7 +299,7 @@ export const apiClient = {
         window.location.href = '/login';
       }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar cliente');
+      throw apiError(errorData, 'Error al cargar cliente');
     }
     return response.json();
   },
@@ -303,7 +318,7 @@ export const apiClient = {
 
       if (!response.ok) {
         console.error('❌ Error del servidor:', responseData);
-        throw new Error(responseData.message || `Error ${response.status} al actualizar cliente`);
+        throw apiError(responseData, `Error ${response.status} al actualizar cliente`);
       }
 
       console.log('✅ Actualización exitosa:', responseData);
@@ -326,7 +341,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al eliminar cliente');
+      throw apiError(errorData, 'Error al eliminar cliente');
     }
     return response.json();
   },
@@ -342,7 +357,7 @@ export const apiClient = {
         window.location.href = '/login';
       }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar estadísticas');
+      throw apiError(errorData, 'Error al cargar estadísticas');
     }
     return response.json();
   },
@@ -367,7 +382,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error generando URL de upload');
+      throw apiError(errorData, 'Error generando URL de upload');
     }
     const responseData = await response.json();
     return {
@@ -406,7 +421,7 @@ export const apiClient = {
       console.log('🔵 Respuesta de confirmación:', responseData);
 
       if (!response.ok) {
-        throw new Error(responseData.message || `Error ${response.status} confirmando upload`);
+        throw apiError(responseData, `Error ${response.status} confirmando upload`);
       }
 
       return responseData as ApiResponse<unknown>;
@@ -427,7 +442,7 @@ export const apiClient = {
     );
     const data = await response.json();
     if (data.success && data.data?.downloadURL) return data.data.downloadURL;
-    throw new Error(data.message || 'Error obteniendo URL de descarga');
+    throw apiError(data, 'Error obteniendo URL de descarga');
   },
 
   async checkExtractionStatus(clientId: string, fileKey: string): Promise<'pending' | 'completed' | 'failed'> {
@@ -460,7 +475,7 @@ export const apiClient = {
       console.log('🗑️ Respuesta de eliminación:', responseData);
 
       if (!response.ok) {
-        throw new Error(responseData.message || `Error ${response.status} eliminando documento`);
+        throw apiError(responseData, `Error ${response.status} eliminando documento`);
       }
 
       return responseData as ApiResponse<unknown>;
@@ -507,7 +522,7 @@ export const apiClient = {
         } catch {
           errorData = { message: errorText || 'Error desconocido' };
         }
-        throw new Error(errorData.message || 'Error generando recomendaciones de IA');
+        throw apiError(errorData, 'Error generando recomendaciones de IA');
       }
 
       const data = await response.json();
@@ -539,7 +554,7 @@ export const apiClient = {
           window.location.href = '/login';
         }
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al cargar progreso de IA');
+        throw apiError(errorData, 'Error al cargar progreso de IA');
       }
 
       const result = await response.json();
@@ -591,7 +606,7 @@ export const apiClient = {
       console.log('📦 Respuesta completa:', responseData);
 
       if (!response.ok) {
-        throw new Error(responseData.message || `Error ${response.status}`);
+        throw apiError(responseData, `Error ${response.status}`);
       }
 
       return responseData as ApiResponse<unknown>;
@@ -617,7 +632,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error aprobando sesión');
+      throw apiError(errorData, 'Error aprobando sesión');
     }
     return response.json() as Promise<ApiResponse<unknown>>;
   },
@@ -634,7 +649,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error enviando sesión al cliente');
+      throw apiError(errorData, 'Error enviando sesión al cliente');
     }
     return response.json() as Promise<ApiResponse<unknown>>;
   },
@@ -668,13 +683,15 @@ export const apiClient = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Error response:', errorText);
-        let errorData: { message?: string };
+        let errorData: { message?: string; code?: string };
         try {
           errorData = JSON.parse(errorText);
         } catch {
           errorData = { message: errorText || 'Error desconocido' };
         }
-        throw new Error(errorData.message || 'Error regenerando sesión');
+        // Adjuntar el código de error de la API para que la UI pueda traducirlo
+        // (translateApiError). El message crudo NO debe mostrarse al usuario.
+        throw apiError(errorData, 'Error regenerando sesión');
       }
 
       const data = await response.json();
@@ -726,7 +743,7 @@ export const apiClient = {
         } catch {
           errorData = { message: errorText || 'Error desconocido' };
         }
-        throw new Error(errorData.message || 'Error importando sesión de IA');
+        throw apiError(errorData, 'Error importando sesión de IA');
       }
 
       const data = await response.json();
@@ -770,7 +787,7 @@ export const apiClient = {
         } catch {
           errorData = { message: errorText || 'Error desconocido' };
         }
-        throw new Error(errorData.message || 'Error extrayendo texto del archivo');
+        throw apiError(errorData, 'Error extrayendo texto del archivo');
       }
 
       const data = await response.json();
@@ -806,7 +823,7 @@ export const apiClient = {
         window.location.href = '/login';
       }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar recetas');
+      throw apiError(errorData, 'Error al cargar recetas');
     }
     return response.json();
   },
@@ -829,7 +846,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error generando URL de upload');
+      throw apiError(errorData, 'Error generando URL de upload');
     }
 
     const result = await response.json();
@@ -868,7 +885,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error confirmando upload');
+      throw apiError(errorData, 'Error confirmando upload');
     }
     return response.json();
   },
@@ -882,7 +899,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error eliminando imagen');
+      throw apiError(errorData, 'Error eliminando imagen');
     }
     return response.json();
   },
@@ -899,7 +916,7 @@ export const apiClient = {
         window.location.href = '/login';
       }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar receta');
+      throw apiError(errorData, 'Error al cargar receta');
     }
     return response.json();
   },
@@ -914,7 +931,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error creando receta');
+      throw apiError(errorData, 'Error creando receta');
     }
     return response.json();
   },
@@ -929,7 +946,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error actualizando receta');
+      throw apiError(errorData, 'Error actualizando receta');
     }
     return response.json();
   },
@@ -943,7 +960,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error eliminando receta');
+      throw apiError(errorData, 'Error eliminando receta');
     }
     return response.json();
   },
@@ -957,7 +974,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error inicializando base de datos');
+      throw apiError(errorData, 'Error inicializando base de datos');
     }
     return response.json();
   },
@@ -985,7 +1002,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Error analizando nutrición');
+      throw apiError(error, 'Error analizando nutrición');
     }
 
     return response.json();
@@ -1070,7 +1087,7 @@ export const apiClient = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error actualizando campos de sesión');
+      throw apiError(errorData, 'Error actualizando campos de sesión');
     }
     return response.json();
   },
@@ -1087,7 +1104,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error actualizando lista de compras');
+      throw apiError(errorData, 'Error actualizando lista de compras');
     }
     return response.json();
   },
@@ -1109,7 +1126,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error actualizando plan semanal');
+      throw apiError(errorData, 'Error actualizando plan semanal');
     }
     return response.json();
   },
@@ -1123,7 +1140,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al cargar ejercicios');
+      throw apiError(errorData, 'Error al cargar ejercicios');
     }
     return response.json();
   },
@@ -1136,7 +1153,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al crear ejercicio');
+      throw apiError(errorData, 'Error al crear ejercicio');
     }
     return response.json();
   },
@@ -1149,7 +1166,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al actualizar ejercicio');
+      throw apiError(errorData, 'Error al actualizar ejercicio');
     }
     return response.json();
   },
@@ -1171,7 +1188,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al eliminar ejercicios');
+      throw apiError(errorData, 'Error al eliminar ejercicios');
     }
     return response.json();
   },
@@ -1185,7 +1202,7 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al registrarse');
+    if (!response.ok) throw apiError(result, 'Error al registrarse');
     return result;
   },
 
@@ -1196,7 +1213,7 @@ export const apiClient = {
       body: JSON.stringify({ email }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al solicitar recuperación');
+    if (!response.ok) throw apiError(result, 'Error al solicitar recuperación');
     return result;
   },
 
@@ -1207,7 +1224,7 @@ export const apiClient = {
       body: JSON.stringify({ token, password }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al restablecer contraseña');
+    if (!response.ok) throw apiError(result, 'Error al restablecer contraseña');
     return result;
   },
 
@@ -1218,7 +1235,7 @@ export const apiClient = {
     if (!response.ok) {
       if (response.status === 401) { window.location.href = '/login'; return null; }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener perfil');
+      throw apiError(errorData, 'Error al obtener perfil');
     }
     return response.json();
   },
@@ -1231,7 +1248,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al actualizar perfil');
+      throw apiError(errorData, 'Error al actualizar perfil');
     }
     return response.json();
   },
@@ -1243,7 +1260,7 @@ export const apiClient = {
       body: JSON.stringify({ currentPassword, newPassword }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al cambiar contraseña');
+    if (!response.ok) throw apiError(result, 'Error al cambiar contraseña');
     return result;
   },
 
@@ -1254,7 +1271,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener enlace');
+      throw apiError(errorData, 'Error al obtener enlace');
     }
     return response.json();
   },
@@ -1268,7 +1285,7 @@ export const apiClient = {
     const response = await fetch(url, { headers: getAuthHeaders() });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener propuestas');
+      throw apiError(errorData, 'Error al obtener propuestas');
     }
     return response.json();
   },
@@ -1281,7 +1298,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al aprobar propuesta');
+      throw apiError(errorData, 'Error al aprobar propuesta');
     }
     return response.json();
   },
@@ -1294,7 +1311,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al rechazar propuesta');
+      throw apiError(errorData, 'Error al rechazar propuesta');
     }
     return response.json();
   },
@@ -1305,7 +1322,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener coaches');
+      throw apiError(errorData, 'Error al obtener coaches');
     }
     return response.json();
   },
@@ -1317,7 +1334,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al eliminar coach');
+      throw apiError(errorData, 'Error al eliminar coach');
     }
     return response.json();
   },
@@ -1331,7 +1348,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al conectar con Stripe');
+      throw apiError(errorData, 'Error al conectar con Stripe');
     }
     return response.json();
   },
@@ -1343,7 +1360,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener enlace de configuración');
+      throw apiError(errorData, 'Error al obtener enlace de configuración');
     }
     return response.json();
   },
@@ -1354,7 +1371,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener estado de Stripe');
+      throw apiError(errorData, 'Error al obtener estado de Stripe');
     }
     return response.json();
   },
@@ -1365,7 +1382,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener datos financieros');
+      throw apiError(errorData, 'Error al obtener datos financieros');
     }
     return response.json();
   },
@@ -1378,7 +1395,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al actualizar precio');
+      throw apiError(errorData, 'Error al actualizar precio');
     }
     return response.json();
   },
@@ -1417,7 +1434,7 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al registrarse en prueba gratuita');
+    if (!response.ok) throw apiError(result, 'Error al registrarse en prueba gratuita');
     return result;
   },
 
@@ -1427,7 +1444,7 @@ export const apiClient = {
       headers: getAuthHeaders(),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al cancelar cuenta');
+    if (!response.ok) throw apiError(result, 'Error al cancelar cuenta');
     return result;
   },
 
@@ -1437,7 +1454,7 @@ export const apiClient = {
       headers: getAuthHeaders(),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al convertir a suscripción paga');
+    if (!response.ok) throw apiError(result, 'Error al convertir a suscripción paga');
     return result;
   },
 
@@ -1450,7 +1467,7 @@ export const apiClient = {
     if (!response.ok) {
       if (response.status === 401) { window.location.href = '/login'; return null; }
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener info de cuenta');
+      throw apiError(errorData, 'Error al obtener info de cuenta');
     }
     return response.json();
   },
@@ -1462,7 +1479,7 @@ export const apiClient = {
       body: JSON.stringify({ action: 'verify-password', currentPassword }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al verificar contraseña');
+    if (!response.ok) throw apiError(result, 'Error al verificar contraseña');
     return result;
   },
 
@@ -1473,7 +1490,7 @@ export const apiClient = {
       body: JSON.stringify({ action: 'suspend' }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al suspender cuenta');
+    if (!response.ok) throw apiError(result, 'Error al suspender cuenta');
     return result;
   },
 
@@ -1484,7 +1501,7 @@ export const apiClient = {
       body: JSON.stringify({ action: 'delete', currentPassword }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Error al eliminar cuenta');
+    if (!response.ok) throw apiError(result, 'Error al eliminar cuenta');
     return result;
   },
 
@@ -1539,7 +1556,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al generar URL de upload');
+      throw apiError(errorData, 'Error al generar URL de upload');
     }
     return response.json();
   },
@@ -1552,7 +1569,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al confirmar upload de recibo');
+      throw apiError(errorData, 'Error al confirmar upload de recibo');
     }
     return response.json();
   },
@@ -1564,7 +1581,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al eliminar recibo');
+      throw apiError(errorData, 'Error al eliminar recibo');
     }
     return response.json();
   },
@@ -1579,7 +1596,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener resumen financiero');
+      throw apiError(errorData, 'Error al obtener resumen financiero');
     }
     return response.json();
   },
@@ -1607,7 +1624,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener transacciones');
+      throw apiError(errorData, 'Error al obtener transacciones');
     }
     return response.json();
   },
@@ -1637,7 +1654,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener gastos');
+      throw apiError(errorData, 'Error al obtener gastos');
     }
     return response.json();
   },
@@ -1663,7 +1680,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al crear gasto');
+      throw apiError(errorData, 'Error al crear gasto');
     }
     return response.json();
   },
@@ -1676,7 +1693,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al actualizar gasto');
+      throw apiError(errorData, 'Error al actualizar gasto');
     }
     return response.json();
   },
@@ -1688,7 +1705,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al eliminar gasto');
+      throw apiError(errorData, 'Error al eliminar gasto');
     }
     return response.json();
   },
@@ -1699,7 +1716,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al obtener configuración fiscal');
+      throw apiError(errorData, 'Error al obtener configuración fiscal');
     }
     return response.json();
   },
@@ -1712,7 +1729,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al actualizar configuración fiscal');
+      throw apiError(errorData, 'Error al actualizar configuración fiscal');
     }
     return response.json();
   },
@@ -1725,7 +1742,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al descargar PDF');
+      throw apiError(errorData, 'Error al descargar PDF');
     }
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
@@ -1746,7 +1763,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al generar reporte');
+      throw apiError(errorData, 'Error al generar reporte');
     }
     return response.json();
   },

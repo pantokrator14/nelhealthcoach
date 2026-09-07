@@ -23,7 +23,7 @@ async function getHandler(request: NextRequest) {
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -58,8 +58,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al cargar notificaciones',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -82,7 +81,7 @@ async function postHandler(request: NextRequest) {
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -92,7 +91,7 @@ async function postHandler(request: NextRequest) {
 
     if (action !== 'markAllRead') {
       return NextResponse.json(
-        { success: false, message: 'Acción no válida' },
+        { success: false, message: 'Acción no válida', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -109,8 +108,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al marcar notificaciones como leídas',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

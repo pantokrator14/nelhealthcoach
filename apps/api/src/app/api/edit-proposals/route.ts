@@ -45,13 +45,13 @@ async function getHandler(request: NextRequest) {
     } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
     logger.error('OTHER', 'Error listando propuestas', error);
     return NextResponse.json(
-      { success: false, message: 'Error interno del servidor' },
+      { success: false, message: 'Error interno del servidor', code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -79,6 +79,7 @@ async function postHandler(request: NextRequest) {
         {
           success: false,
           message: 'targetType, targetId y proposedChanges son requeridos',
+          code: 'VALIDATION',
         },
         { status: 400 }
       );
@@ -86,7 +87,7 @@ async function postHandler(request: NextRequest) {
 
     if (!['recipe', 'exercise'].includes(targetType)) {
       return NextResponse.json(
-        { success: false, message: 'targetType debe ser "recipe" o "exercise"' },
+        { success: false, message: 'targetType debe ser "recipe" o "exercise"', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -138,13 +139,13 @@ async function postHandler(request: NextRequest) {
     } catch (error: unknown) {
     if ((error as Error).message?.includes('Token')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
     logger.error('OTHER', 'Error creando propuesta', error);
     return NextResponse.json(
-      { success: false, message: 'Error interno del servidor' },
+      { success: false, message: 'Error interno del servidor', code: 'INTERNAL'},
       { status: 500 }
     );
   }

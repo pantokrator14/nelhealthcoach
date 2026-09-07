@@ -22,7 +22,7 @@ async function putHandler(request: NextRequest) {
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -33,14 +33,14 @@ async function putHandler(request: NextRequest) {
 
     if (price === undefined || price === null) {
       return NextResponse.json(
-        { success: false, message: 'El precio es requerido' },
+        { success: false, message: 'El precio es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (typeof price !== 'number' || price < 5000 || price > 100000) {
       return NextResponse.json(
-        { success: false, message: 'El precio debe ser entre $50 y $1,000 USD' },
+        { success: false, message: 'El precio debe ser entre $50 y $1,000 USD', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -50,7 +50,7 @@ async function putHandler(request: NextRequest) {
 
     if (!coach) {
       return NextResponse.json(
-        { success: false, message: 'Coach no encontrado' },
+        { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -58,7 +58,7 @@ async function putHandler(request: NextRequest) {
     // Validar que tenga Stripe conectado
     if (!coach.stripeConnectAccountId) {
       return NextResponse.json(
-        { success: false, message: 'Debes conectar Stripe antes de fijar un precio' },
+        { success: false, message: 'Debes conectar Stripe antes de fijar un precio', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -82,8 +82,7 @@ async function putHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al actualizar el precio',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

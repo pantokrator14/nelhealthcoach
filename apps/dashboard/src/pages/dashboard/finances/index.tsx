@@ -3,6 +3,8 @@ import Layout from '../../../components/dashboard/Layout';
 import Head from 'next/head';
 import { useToast } from '../../../components/ui/Toast';
 import { apiClient, FinancesData } from '../../../lib/api';
+import { translateApiError } from '@/lib/apiErrorText';
+
 import { useTranslation } from 'react-i18next';
 
 // ═══════════════════════════════════════════════
@@ -153,7 +155,7 @@ function CoachFinancesPage() {
         }
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('finances.errorLoad'), 'error');
+      showToast(translateApiError(err, t, 'finances.errorLoad'), 'error');
     } finally {
       setLoading(false);
     }
@@ -175,10 +177,10 @@ function CoachFinancesPage() {
         setEditingPrice(false);
         setData(prev => prev ? { ...prev, sesionPrice: priceNum * 100 } : prev);
       } else {
-        showToast(res.message || t('finances.errorSave'), 'error');
+        showToast(translateApiError(res, t, 'finances.errorSave'), 'error');
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('finances.errorSavePrice'), 'error');
+      showToast(translateApiError(err, t, 'finances.errorSavePrice'), 'error');
     } finally {
       setSavingPrice(false);
     }
@@ -597,7 +599,7 @@ function AdminFinancesPage() {
         throw new Error(confirmRes.message || 'Error al confirmar upload');
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al subir recibo', 'error');
+      showToast(translateApiError(err, t, 'adminFinance.receiptUploadError'), 'error');
     } finally {
       setUploadingReceiptId(null);
     }
@@ -608,11 +610,11 @@ function AdminFinancesPage() {
     try {
       const res = await apiClient.deleteReceipt(expenseId);
       if (res.success) {
-        showToast('Recibo eliminado', 'success');
+        showToast(t('adminFinance.receiptDeleted'), 'success');
         loadExpenses();
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error al eliminar recibo', 'error');
+      showToast(translateApiError(err, t, 'adminFinance.receiptDeleteError'), 'error');
     }
   };
 
@@ -643,7 +645,7 @@ function AdminFinancesPage() {
         setSummary(res.data);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorLoad'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorLoad'), 'error');
     } finally {
       setSummaryLoading(false);
     }
@@ -665,7 +667,7 @@ function AdminFinancesPage() {
         setIncomeData(res.data);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorLoad'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorLoad'), 'error');
     } finally {
       setIncomeLoading(false);
     }
@@ -690,7 +692,7 @@ function AdminFinancesPage() {
         setExpensesPagination(res.data.pagination);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorLoad'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorLoad'), 'error');
     } finally {
       setExpensesLoading(false);
     }
@@ -707,11 +709,11 @@ function AdminFinancesPage() {
   const handleCreateExpense = async () => {
     const amountNum = Math.round(parseFloat(expenseForm.amount) * 100);
     if (isNaN(amountNum) || amountNum <= 0) {
-      showToast('Ingresa un monto válido', 'error');
+      showToast(t('adminFinance.expenseAmountInvalid'), 'error');
       return;
     }
     if (!expenseForm.description.trim()) {
-      showToast('Ingresa una descripción', 'error');
+      showToast(t('adminFinance.expenseDescriptionRequired'), 'error');
       return;
     }
     try {
@@ -750,7 +752,7 @@ function AdminFinancesPage() {
         loadExpenses();
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorCreate'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorCreate'), 'error');
     } finally {
       setExpenseFormSaving(false);
     }
@@ -765,7 +767,7 @@ function AdminFinancesPage() {
         loadExpenses();
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorDelete'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorDelete'), 'error');
     }
   };
 
@@ -781,7 +783,7 @@ function AdminFinancesPage() {
         setReportData(res.data);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('adminFinance.errorLoad'), 'error');
+      showToast(translateApiError(err, t, 'adminFinance.errorLoad'), 'error');
     } finally {
       setReportLoading(false);
     }
@@ -1450,7 +1452,7 @@ function AdminFinancesPage() {
                         try {
                           await apiClient.downloadFinanceReportPDF(reportType, taxYear);
                         } catch (err) {
-                          showToast(err instanceof Error ? err.message : 'Error al descargar PDF', 'error');
+                          showToast(translateApiError(err, t, 'adminFinance.reportDownloadError'), 'error');
                         }
                       }}
                       className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition"
@@ -1639,7 +1641,7 @@ function SettingsPanel({
         loadSettings();
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Error', 'error');
+      showToast(translateApiError(err, t, 'common.error'), 'error');
     } finally {
       setSaving(false);
     }

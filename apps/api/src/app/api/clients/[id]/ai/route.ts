@@ -192,7 +192,7 @@ async function getHandler(
       if (!client) {
         loggerWithContext.warn('AI', 'Cliente no encontrado');
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -374,8 +374,7 @@ async function getHandler(
           requestId,
           ...(process.env.NODE_ENV === 'development' && {
             error: error.message
-          })
-        },
+          }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -419,7 +418,7 @@ async function postHandler(
       } catch (error) {
         loggerWithContext.error('AI', 'Error parseando JSON de la solicitud', error as Error);
         return NextResponse.json(
-          { success: false, message: 'Cuerpo de solicitud inválido' },
+          { success: false, message: 'Cuerpo de solicitud inválido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -437,7 +436,7 @@ async function postHandler(
       if (!client) {
         loggerWithContext.warn('AI', 'Cliente no encontrado');
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -490,8 +489,7 @@ async function postHandler(
           requestId,
           ...(process.env.NODE_ENV === 'development' && {
             error: errorObj.message
-          })
-        },
+          }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -1009,7 +1007,7 @@ async function putHandler(
       if (!client || !client.aiProgress) {
         loggerWithContext.warn('AI', 'Cliente o progreso de IA no encontrado');
         return NextResponse.json(
-          { success: false, message: 'Cliente o progreso de IA no encontrado' },
+          { success: false, message: 'Cliente o progreso de IA no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -1070,8 +1068,7 @@ async function putHandler(
                 {
                   success: false,
                   message: 'No se pudo aprobar la sesión. Verifica que la sesión esté en estado "draft".',
-                  requestId
-                },
+                  requestId, code: 'SESSION_NOT_DRAFT'},
                 { status: 400 } // Cambia a 400 Bad Request
               );
             }
@@ -1083,8 +1080,7 @@ async function putHandler(
               {
                 success: false,
                 message: `Error aprobando sesión: ${error.message}`,
-                requestId
-              },
+                requestId, code: 'INTERNAL'},
               { status: 500 }
             );
           }
@@ -1109,13 +1105,13 @@ async function putHandler(
           );
           if (!targetSession) {
             return NextResponse.json(
-              { success: false, message: 'Sesión no encontrada' },
+              { success: false, message: 'Sesión no encontrada', code: 'SESSION_NOT_FOUND'},
               { status: 404 }
             );
           }
           if (targetSession.status !== 'draft') {
             return NextResponse.json(
-              { success: false, message: `Solo se pueden regenerar sesiones en estado 'draft'. Estado actual: '${targetSession.status}'` },
+              { success: false, message: `Solo se pueden regenerar sesiones en estado 'draft'. Estado actual: '${targetSession.status}'`, code: 'SESSION_NOT_DRAFT'},
               { status: 400 }
             );
           }
@@ -1177,7 +1173,7 @@ async function putHandler(
         default:
           loggerWithContext.warn('AI', 'Acción no válida', { action });
           return NextResponse.json(
-            { success: false, message: 'Acción no válida' },
+            { success: false, message: 'Acción no válida', code: 'VALIDATION'},
             { status: 400 }
           );
       }
@@ -1186,7 +1182,7 @@ async function putHandler(
       if (!operationResult) {
         loggerWithContext.error('AI', 'No se pudo realizar la actualización');
         return NextResponse.json(
-          { success: false, message: 'No se pudo realizar la actualización' },
+          { success: false, message: 'No se pudo realizar la actualización', code: 'INTERNAL'},
           { status: 500 }
         );
       }
@@ -1219,8 +1215,7 @@ async function putHandler(
           requestId,
           ...(process.env.NODE_ENV === 'development' && {
             error: error.message
-          })
-        },
+          }), code: 'INTERNAL'},
         { status: 500 }
       );
     }

@@ -87,7 +87,7 @@ async function postHandler(request: NextRequest) {
 
     if (typeof validationResult === 'string') {
       return NextResponse.json(
-        { success: false, message: validationResult },
+        { success: false, message: validationResult, code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -147,8 +147,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al crear el gasto',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }
@@ -250,8 +249,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al listar gastos',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

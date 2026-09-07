@@ -37,7 +37,7 @@ async function postHandler(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { success: false, message: 'No se proporcionó ningún archivo' },
+        { success: false, message: 'No se proporcionó ningún archivo', code: 'VALIDATION'},
         { status: 400 },
       );
     }
@@ -48,6 +48,7 @@ async function postHandler(request: NextRequest) {
         {
           success: false,
           message: `El archivo es demasiado grande (máximo ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+          code: 'VALIDATION',
         },
         { status: 400 },
       );
@@ -60,6 +61,7 @@ async function postHandler(request: NextRequest) {
         {
           success: false,
           message: `Tipo de archivo no soportado: "${file.type}". Permitidos: ${allowed}`,
+          code: 'VALIDATION',
         },
         { status: 400 },
       );
@@ -143,6 +145,7 @@ async function postHandler(request: NextRequest) {
         success: false,
         message: 'Error extrayendo texto del archivo',
         ...(process.env.NODE_ENV === 'development' && { detail: message }),
+        code: 'INTERNAL',
       },
       { status: 500 },
     );

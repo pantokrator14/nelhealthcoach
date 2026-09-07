@@ -52,7 +52,7 @@ async function postHandler(request: NextRequest) {
     if (!parsed.success) {
       const firstError = parsed.error.issues[0];
       return NextResponse.json(
-        { success: false, message: firstError?.message ?? 'Datos de registro inválidos' },
+        { success: false, message: firstError?.message ?? 'Datos de registro inválidos', code: 'VALIDATION'},
         { status: 400 },
       );
     }
@@ -96,7 +96,7 @@ async function postHandler(request: NextRequest) {
         metadata: { reason: 'email_exists' },
       });
       return NextResponse.json(
-        { success: false, message: 'Ya existe una cuenta con este email' },
+        { success: false, message: 'Ya existe una cuenta con este email', code: 'CONFLICT'},
         { status: 409 }
       );
     }
@@ -143,7 +143,7 @@ async function postHandler(request: NextRequest) {
         metadata: { reason: 'admin_impersonation' },
       });
       return NextResponse.json(
-        { success: false, message: 'No puedes registrarte con el email del administrador' },
+        { success: false, message: 'No puedes registrarte con el email del administrador', code: 'FORBIDDEN'},
         { status: 403 }
       );
     }
@@ -283,8 +283,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

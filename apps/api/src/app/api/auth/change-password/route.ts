@@ -33,7 +33,7 @@ async function changePasswordHandler(request: NextRequest) {
       statusCode: 401,
     });
     return NextResponse.json(
-      { success: false, message: 'No autorizado' },
+      { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
       { status: 401 },
     );
   }
@@ -52,7 +52,7 @@ async function changePasswordHandler(request: NextRequest) {
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
     return NextResponse.json(
-      { success: false, message: firstError?.message ?? 'Datos de contraseña inválidos' },
+      { success: false, message: firstError?.message ?? 'Datos de contraseña inválidos', code: 'VALIDATION'},
       { status: 400 },
     );
   }
@@ -63,7 +63,7 @@ async function changePasswordHandler(request: NextRequest) {
   const coach = await Coach.findById(auth.coachId);
   if (!coach) {
     return NextResponse.json(
-      { success: false, message: 'Coach no encontrado' },
+      { success: false, message: 'Coach no encontrado', code: 'NOT_FOUND'},
       { status: 404 },
     );
   }
@@ -84,7 +84,7 @@ async function changePasswordHandler(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: false, message: 'La contraseña actual es incorrecta' },
+      { success: false, message: 'La contraseña actual es incorrecta', code: 'VALIDATION'},
       { status: 400 },
     );
   }

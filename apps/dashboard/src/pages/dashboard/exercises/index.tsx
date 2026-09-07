@@ -7,6 +7,8 @@ import ExerciseDetailModal from '../../../components/dashboard/ExerciseDetailMod
 import ExerciseFilters, { ExerciseFilterState } from '../../../components/dashboard/ExerciseFilters';
 import { useToast } from '../../../components/ui/Toast';
 import { apiClient, Exercise } from '../../../lib/api';
+import { translateApiError } from '@/lib/apiErrorText';
+
 import { useTranslation } from 'react-i18next';
 
 interface Proposal {
@@ -116,7 +118,7 @@ const ExercisesPage = () => {
       loadProposals();
       loadExercises();
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : t('exercises.errorApproving'), 'error');
+      showToast(translateApiError(err, t, 'exercises.errorApproving'), 'error');
     }
   };
 
@@ -126,7 +128,7 @@ const ExercisesPage = () => {
       showToast(t('exercises.proposalRejected'), 'success');
       loadProposals();
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : t('exercises.errorRejecting'), 'error');
+      showToast(translateApiError(err, t, 'exercises.errorRejecting'), 'error');
     }
   };
 
@@ -254,8 +256,7 @@ const ExercisesPage = () => {
         loadExercises();
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : t('exercises.errorDeleting');
-      showToast(errorMessage, 'error');
+      showToast(translateApiError(err, t, 'exercises.errorDeleting'), 'error');
     }
   }, [selectedExercises, showToast, loadExercises]);
 

@@ -93,7 +93,7 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
         metadata,
       });
       return NextResponse.json(
-        { success: false, message: 'Metadata incompleta: falta clientId o sessionId' },
+        { success: false, message: 'Metadata incompleta: falta clientId o sessionId', code: 'VALIDATION'},
         { status: 200 } // 200 para que Deepgram no reintente
       );
     }
@@ -309,7 +309,7 @@ Responde solo con el JSON, sin explicaciones adicionales.`;
     }
 
     return NextResponse.json(
-      { success: false, message: 'Error processing transcription callback' },
+      { success: false, message: 'Error processing transcription callback', code: 'INTERNAL'},
       { status: 500 }
     );
   }

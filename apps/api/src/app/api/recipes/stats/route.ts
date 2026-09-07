@@ -9,7 +9,7 @@ async function getHandler(request: NextRequest) {
     requireCoachAuth(request);
   } catch {
     return NextResponse.json(
-      { success: false, message: 'No autorizado' },
+      { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
       { status: 401 }
     );
   }
@@ -109,8 +109,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error obteniendo estadísticas',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   } finally {

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import React from 'react';
 import { apiClient, Exercise } from '@/lib/api';
+import { translateApiError, withSupportHint } from '@/lib/apiErrorText';
+
 import RecipeSearchModal from './RecipeSearchModal';
 import ExerciseSearchModal from './ExerciseSearchModal';
 import SimpleItemModal from './SimpleItemModal';
@@ -1461,7 +1463,7 @@ export default function AIRecommendationsModal({
       await apiClient.approveAISession(clientId, sessionId);
       await loadAIProgress();
     } catch (e) {
-      showToast((e as Error).message || 'Error', 'error');
+      showToast(translateApiError(e, t, 'common.error'), 'error');
     }
   }, [clientId, loadAIProgress]);
 
@@ -1505,7 +1507,9 @@ export default function AIRecommendationsModal({
             // Poll intermedio fallido: seguir esperando
           }
         }
-        showToast(t('ai.errorRegenerateTimeout'), 'warning');
+        // El worker sigue reintentando el job en background (hasta 3 intentos),
+        // así que el mensaje es informativo: puede completarse minutos después.
+        showToast(t('ai.generationStillRunning'), 'warning');
         setLoading(false);
       } else {
         // Respuesta síncrona (fallback sin cola) → datos ya actualizados
@@ -1513,7 +1517,7 @@ export default function AIRecommendationsModal({
         setLoading(false);
       }
     } catch (e) {
-      showToast((e as Error).message || 'Error', 'error');
+      showToast(translateApiError(e, t, 'ai.errorGenerating'), 'error');
       setLoading(false);
     }
   }, [activeSession, clientId, loadAIProgress, showToast, t]);
@@ -1525,7 +1529,7 @@ export default function AIRecommendationsModal({
       await loadAIProgress();
       showToast(t('ai.toastEmailResent'), 'success');
     } catch (e) {
-      showToast((e as Error).message || 'Error', 'error');
+      showToast(translateApiError(e, t, 'common.error'), 'error');
     } finally {
       setLoading(false);
     }
@@ -1664,6 +1668,7 @@ export default function AIRecommendationsModal({
    * más detallados (como los generados por explainTranscriptionError).
    */
   const handleRetryTranscription = useCallback(async (sessionId: string) => {
+    let toastShown = false; // evita doble toast si la rama success=false ya mostró el error
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -1686,22 +1691,23 @@ export default function AIRecommendationsModal({
         setTranscriptError(null);
         setTranscriptPolling(true);
         // Mostrar el mensaje del backend si viene (incluye instrucciones para el coach)
-        const successMsg = data.data?.message || 'Reintentando transcripción...';
+        const successMsg = data.data?.message || t('ai.retryingTranscript');
         showToast(successMsg, 'info');
       } else {
         // El backend devuelve un mensaje descriptivo (con causas y recomendaciones)
-        const errorMsg = data.message || 'Error al reintentar transcripción';
+        const errorMsg = withSupportHint(data.message || t('ai.retryTranscriptError'), t);
+        toastShown = true;
         showToast(errorMsg, 'error');
         throw new Error(errorMsg);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      // Solo mostrar toast si no se mostró ya desde la rama success=false
-      if (!(err instanceof Error && err.message.includes('Error al reintentar'))) {
-        showToast(`Error: ${message}`, 'error');
+      // Solo mostrar toast adicional si el error NO se mostró ya en success=false
+      if (!toastShown) {
+        const message = err instanceof Error ? err.message : t('ai.unknownError');
+        showToast(`${t('common.error')}: ${message}`, 'error');
       }
     }
-  }, []);
+  }, [showToast, t]);
 
   /**
    * Copia el enlace del cliente al portapapeles.

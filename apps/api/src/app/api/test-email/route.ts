@@ -6,7 +6,7 @@ async function getHandler() {
   // Solo accesible en desarrollo
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
-      { success: false, message: 'No disponible en producción' },
+      { success: false, message: 'No disponible en producción', code: 'FORBIDDEN'},
       { status: 403 }
     );
   }

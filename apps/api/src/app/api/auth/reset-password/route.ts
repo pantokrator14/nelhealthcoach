@@ -21,14 +21,14 @@ async function postHandler(request: NextRequest) {
 
     if (!token || !password) {
       return NextResponse.json(
-        { success: false, message: 'Token y nueva contraseña requeridos' },
+        { success: false, message: 'Token y nueva contraseña requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
-        { success: false, message: 'La contraseña debe tener al menos 6 caracteres' },
+        { success: false, message: 'La contraseña debe tener al menos 6 caracteres', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -62,6 +62,7 @@ async function postHandler(request: NextRequest) {
         {
           success: false,
           message: 'Token inválido o expirado. Solicita un nuevo enlace.',
+          code: 'VALIDATION',
         },
         { status: 400 }
       );
@@ -99,8 +100,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

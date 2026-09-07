@@ -143,9 +143,9 @@ export default function Login() {
                             body: JSON.stringify({ email }),
                           });
                           setError('');
-                          showToast('Se ha reenviado el enlace de verificación a tu email.', 'success');
+                          showToast(t('auth.resendVerificationSent'), 'success');
                         } catch {
-                          showToast('No se pudo reenviar la verificación. Intenta de nuevo.', 'error');
+                          showToast(t('auth.resendVerificationFailed'), 'error');
                         } finally {
                           setLoading(false);
                         }

@@ -45,7 +45,7 @@ async function postHandler(request: NextRequest) {
     // Validaciones
     if (paymentType === 'session_renewal' && !pendingSessionId) {
       return NextResponse.json(
-        { success: false, message: 'pendingSessionId es requerido para renovación' },
+        { success: false, message: 'pendingSessionId es requerido para renovación', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -57,8 +57,7 @@ async function postHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error de configuración de pagos',
-          ...(process.env.NODE_ENV === 'development' && { detail: 'STRIPE_CLIENT_PRICE_ID no definida en variables de entorno' })
-        },
+          ...(process.env.NODE_ENV === 'development' && { detail: 'STRIPE_CLIENT_PRICE_ID no definida en variables de entorno' }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -132,8 +131,7 @@ async function postHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error al iniciar el pago',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

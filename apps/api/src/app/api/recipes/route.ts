@@ -95,8 +95,7 @@ async function getHandler(request: NextRequest) {
         { 
           success: false, 
           message: 'Error en búsqueda',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -129,6 +128,7 @@ async function postHandler(request: NextRequest) {
               field: i.path.join('.'),
               message: i.message,
             })),
+            code: 'VALIDATION',
           },
           { status: 400 },
         );
@@ -332,7 +332,7 @@ async function postHandler(request: NextRequest) {
       }
       logger.error('RECIPES', 'Error creando receta', error);
       return NextResponse.json(
-        { success: false, message: 'Error creando receta' },
+        { success: false, message: 'Error creando receta', code: 'INTERNAL'},
         { status: 500 }
       );
     }

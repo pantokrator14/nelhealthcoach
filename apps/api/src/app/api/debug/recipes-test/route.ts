@@ -10,10 +10,10 @@ async function getHandler(request: NextRequest) {
     try {
       const auth = requireCoachAuth(request);
       if (auth.role !== 'admin') {
-        return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 403 });
+        return NextResponse.json({ success: false, message: 'No autorizado', code: 'FORBIDDEN'}, { status: 403 });
       }
     } catch {
-      return NextResponse.json({ success: false, message: 'No autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'No autorizado', code: 'UNAUTHORIZED'}, { status: 401 });
     }
   }
 
@@ -23,7 +23,7 @@ async function getHandler(request: NextRequest) {
   // 1. Intentar conectar con una configuración MUY básica y sin Mongoose models
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
-    return NextResponse.json({ success: false, error: 'MONGODB_URI no definida' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'MONGODB_URI no definida', code: 'INTERNAL'}, { status: 500 });
   }
 
   // Usar el driver nativo de MongoDB para eliminar variables (mongoose)
@@ -58,8 +58,7 @@ async function getHandler(request: NextRequest) {
       return NextResponse.json({ 
         success: false, 
         error: 'La colección "recipes" NO aparece en listCollections. ¿Seguro que está en la BD correcta?',
-        dbName
-      }, { status: 404 });
+        dbName, code: 'NOT_FOUND'}, { status: 404 });
     }
     
     // 4. Prueba CRÍTICA: ¿Podemos hacer un COUNT? (permiso de lectura a nivel de colección)
@@ -89,16 +88,14 @@ async function getHandler(request: NextRequest) {
         return NextResponse.json({ 
           success: false, 
           error: `COUNT falló pero INSERT funcionó. Esto SUGIERE UN PROBLEMA DE PERMISOS: El usuario NO tiene permiso de LECTURA (find, count) pero sí de ESCRITURA en "recipes".`,
-          countError: countError.message
-        }, { status: 403 });
+          countError: countError.message, code: 'FORBIDDEN'}, { status: 403 });
       } catch (insertError: any) {
         console.error('❌ INSERTOne también FALLÓ:', insertError.message);
         return NextResponse.json({ 
           success: false, 
           error: `COUNT e INSERT fallaron. Problema grave de permisos o de red.`,
           countError: countError.message,
-          insertError: insertError.message
-        }, { status: 403 });
+          insertError: insertError.message, code: 'FORBIDDEN'}, { status: 403 });
       }
     }
     
@@ -107,8 +104,7 @@ async function getHandler(request: NextRequest) {
     return NextResponse.json({ 
       success: false, 
       error: 'Error de conexión o tiempo de espera.',
-      ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message })
-    }, { status: 500 });
+      ...(process.env.NODE_ENV === 'development' && { detail: (error as Error).message }), code: 'INTERNAL'}, { status: 500 });
   } finally {
     if (client) {
       await client.close();

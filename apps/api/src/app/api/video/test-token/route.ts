@@ -23,7 +23,7 @@ async function postHandler(request: NextRequest) {
     // ── Seguridad: solo en desarrollo ──
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { success: false, message: 'Endpoint solo disponible en desarrollo' },
+        { success: false, message: 'Endpoint solo disponible en desarrollo', code: 'FORBIDDEN'},
         { status: 403 }
       );
     }
@@ -32,7 +32,7 @@ async function postHandler(request: NextRequest) {
 
     if (!body.roomName || !body.role) {
       return NextResponse.json(
-        { success: false, message: 'roomName y role son requeridos' },
+        { success: false, message: 'roomName y role son requeridos', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -65,7 +65,7 @@ async function postHandler(request: NextRequest) {
       const secret = process.env.JWT_SECRET;
       if (!secret) {
         return NextResponse.json(
-          { success: false, message: 'JWT_SECRET no está configurado' },
+          { success: false, message: 'JWT_SECRET no está configurado', code: 'INTERNAL'},
           { status: 500 },
         );
       }
@@ -103,6 +103,7 @@ async function postHandler(request: NextRequest) {
         success: false,
         message: 'Error interno del servidor',
         ...(process.env.NODE_ENV === 'development' && { detail: msg }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );

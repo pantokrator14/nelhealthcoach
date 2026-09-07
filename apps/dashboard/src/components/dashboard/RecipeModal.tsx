@@ -5,6 +5,7 @@ import AutocompleteInput from '../ui/AutocompleteInput';
 import DragDropList from '../ui/DragDropList';
 import { NutritionTooltip } from '../ui/Tooltip';
 import { apiClient } from '../../lib/api';
+import { translateApiError } from '../../lib/apiErrorText';
 import { useToast } from '../ui/Toast';
 import { useTranslation } from 'react-i18next';
 
@@ -511,7 +512,7 @@ showToast(t('recipes.recipeCreatedImageError'), 'warning');
       
     } catch (error) {
       console.error('Error guardando receta:', error);
-      const errorMessage = error instanceof Error ? error.message : t('recipes.error');
+      const errorMessage = translateApiError(error, t, 'recipes.error');
       showToast(errorMessage, 'error');
       setErrors(prev => ({ ...prev, form: errorMessage }));
     } finally {

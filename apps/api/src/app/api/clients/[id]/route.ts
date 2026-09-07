@@ -50,7 +50,7 @@ async function getHandler(
       if (!client) {
         logger.warn('CLIENTS', 'Cliente no encontrado', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -304,14 +304,14 @@ async function getHandler(
       
       if (error.message.includes('Token')) {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
 
       if (error.message.includes('ObjectId')) {
         return NextResponse.json(
-          { success: false, message: 'ID de cliente inválido' },
+          { success: false, message: 'ID de cliente inválido', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -320,8 +320,7 @@ async function getHandler(
         { 
           success: false, 
           message: 'Error interno del servidor',
-          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-        },
+          ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -381,7 +380,7 @@ async function putHandler(
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -395,7 +394,7 @@ async function putHandler(
 
       if (!existingClient) {
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -407,7 +406,7 @@ async function putHandler(
           clientCoachId: existingClient.coachId,
         });
         return NextResponse.json(
-          { success: false, message: 'No tienes permiso para modificar este cliente' },
+          { success: false, message: 'No tienes permiso para modificar este cliente', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -432,7 +431,7 @@ async function putHandler(
       if (!data.personalData || !data.medicalData) {
         logger.warn('CLIENTS', 'Datos incompletos para actualización', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Datos incompletos' },
+          { success: false, message: 'Datos incompletos', code: 'VALIDATION'},
           { status: 400 }
         );
       }
@@ -589,7 +588,7 @@ async function putHandler(
       if (result.matchedCount === 0) {
         logger.warn('CLIENTS', 'Cliente no encontrado para actualización', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -621,7 +620,7 @@ async function putHandler(
       
       if (error.message.includes('Token')) {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -632,8 +631,7 @@ async function putHandler(
           message: 'Error interno del servidor',
           ...(process.env.NODE_ENV === 'development' && { 
             error: error.message
-          })
-        },
+          }), code: 'INTERNAL'},
         { status: 500 }
       );
     }
@@ -663,7 +661,7 @@ async function deleteHandler(
         auth = requireCoachAuth(request);
       } catch {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -682,7 +680,7 @@ async function deleteHandler(
 
       if (!client) {
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -695,7 +693,7 @@ async function deleteHandler(
           clientCoachId: client.coachId,
         });
         return NextResponse.json(
-          { success: false, message: 'No tienes permiso para eliminar este cliente' },
+          { success: false, message: 'No tienes permiso para eliminar este cliente', code: 'FORBIDDEN'},
           { status: 403 }
         );
       }
@@ -855,7 +853,7 @@ async function deleteHandler(
       if (result.deletedCount === 0) {
         logger.warn('CLIENTS', 'Cliente no encontrado para eliminación', undefined, { clientId: id });
         return NextResponse.json(
-          { success: false, message: 'Cliente no encontrado' },
+          { success: false, message: 'Cliente no encontrado', code: 'NOT_FOUND'},
           { status: 404 }
         );
       }
@@ -887,7 +885,7 @@ async function deleteHandler(
       
       if (error.message.includes('Token')) {
         return NextResponse.json(
-          { success: false, message: 'No autorizado' },
+          { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
           { status: 401 }
         );
       }
@@ -898,8 +896,7 @@ async function deleteHandler(
           message: 'Error interno del servidor',
           ...(process.env.NODE_ENV === 'development' && { 
             error: error.message
-          })
-        },
+          }), code: 'INTERNAL'},
         { status: 500 }
       );
     }

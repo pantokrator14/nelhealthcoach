@@ -270,55 +270,73 @@ export default function ClientProfile() {
   useEffect(() => {
     if (aiGenerationStatus !== 'queued' || !clientId) return
 
-    let pollCount = 0;
-    // 60 polls × 10s = 10 min: la generación con documentos médicos puede
-    // tardar 5-8 min (FASE 1 y FASE 2 con modelos reasoner + 32000 tokens).
-    // Antes: 30 polls (5 min) → la UI abandonaba justo cuando FASE 1 completaba.
-    const MAX_POLLS = 60;
+    let pollCount = 0
+    let slow = false
+    let timer: ReturnType<typeof setInterval> | undefined
+    // Etapa rápida: 60 × 10s = 10 min. Con documentos médicos el pipeline
+    // (FASE 1/2 con modelo reasoner + 32000 tokens) puede no caber en una sola
+    // invocación de 300s en Vercel Hobby: la cola reintenta el job hasta 3 veces
+    // (lease de 6 min por intento), así que el job puede terminar hasta
+    // ~20-25 min después del envío (con sesión nueva o error final).
+    // Etapa lenta: 40 × 30s = 20 min extra para capturar ese estado final.
+    const FAST_POLLS = 60
+    const SLOW_POLLS = 40
 
-    const pollInterval = setInterval(async () => {
-      pollCount++;
+    const stop = () => { if (timer) clearInterval(timer) }
+    const finish = () => { setAiGenerationStatus('ready'); setIsGeneratingAI(false) }
+
+    const tick = async () => {
+      pollCount++
       try {
         const result = await apiClient.getAIProgress(clientId)
         const sessions = result.data?.aiProgress?.sessions
         const genError = result.data?.generationError as { message?: string } | undefined
 
-        // ¿Error de generación reportado por el worker de la cola?
+        // ¿Error final de generación reportado por el worker de la cola?
         if (genError?.message) {
-          setAiGenerationStatus('ready')
+          stop()
+          finish()
           // Mensaje localizado (el backend manda detalle técnico en español)
           const friendlyError = translateGenerationError(genError.message, t)
           setAiError(friendlyError)
-          setIsGeneratingAI(false)
-          clearInterval(pollInterval)
-          showToast(`${friendlyError}`, 'error')
+          showToast(friendlyError, 'error')
           return
         }
 
-        // ¿Sesiones encontradas?
+        // ¿Sesiones encontradas? (incluye reintentos posteriores de la cola)
         if (result.success && sessions && sessions.length > 0) {
-          setAiGenerationStatus('ready')
+          stop()
+          finish()
           setAiError(null)
-          setIsGeneratingAI(false)
-          clearInterval(pollInterval)
           const clientName = client?.personalData?.name ?? 'El cliente'
-          showToast(`✅ Las recomendaciones de IA para ${clientName} están listas para tu revisión.`, 'success')
+          showToast(t('ai.recommendationsReady', { name: clientName }), 'success')
           fetchClient()
           return
         }
-        // Si después de MAX_POLLS intentos no hay resultados, detener
-        if (pollCount >= MAX_POLLS) {
-          setAiGenerationStatus('ready')
-          setIsGeneratingAI(false)
-          clearInterval(pollInterval)
-          showToast(`⚠️ La generación de IA está tardando más de lo esperado. Intenta de nuevo.`, 'warning')
-        }
       } catch {
-        // Silently ignore polling errors
+        // Ignorar errores transitorios (incluye el 504 del worker al morir
+        // por el límite de 300s): la cola reintentará el job en el próximo poll.
       }
-    }, 10000)
 
-    return () => clearInterval(pollInterval)
+      // Sin estado terminal aún → decidir el siguiente tick
+      if (!slow && pollCount >= FAST_POLLS) {
+        // 10 min sin resultado: avisar (traducido) que sigue en segundo plano
+        // y bajar la frecuencia en vez de abandonar.
+        slow = true
+        stop()
+        showToast(t('ai.generationStillRunning'), 'warning')
+        timer = setInterval(tick, 30000)
+      } else if (slow && pollCount >= FAST_POLLS + SLOW_POLLS) {
+        // ~30 min sin estado terminal (no debería pasar: la cola falla el job
+        // definitivamente tras 3 intentos): detener y dejar que el banner o
+        // una recarga capturen el estado real.
+        stop()
+        finish()
+      }
+    }
+
+    timer = setInterval(tick, 10000)
+    return stop
   }, [clientId, aiGenerationStatus]) // aiGenerationStatus es necesario para disparar/re-detener el polling
 
   const handleDelete = async () => {

@@ -25,7 +25,7 @@ async function patchHandler(
       auth = requireCoachAuth(request);
     } catch {
       return NextResponse.json(
-        { success: false, message: 'No autorizado' },
+        { success: false, message: 'No autorizado', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -39,7 +39,7 @@ async function patchHandler(
 
     if (!notification) {
       return NextResponse.json(
-        { success: false, message: 'Notificación no encontrada' },
+        { success: false, message: 'Notificación no encontrada', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -51,8 +51,7 @@ async function patchHandler(
       { 
         success: false, 
         message: 'Error al marcar notificación como leída',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

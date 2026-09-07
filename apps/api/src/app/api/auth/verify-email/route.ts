@@ -13,7 +13,7 @@ async function getHandler(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { success: false, message: 'Token de verificación requerido' },
+        { success: false, message: 'Token de verificación requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -36,6 +36,7 @@ async function getHandler(request: NextRequest) {
           success: false,
           message: 'El enlace de verificación es inválido o ha expirado. Solicita un nuevo enlace desde la pantalla de inicio de sesión.',
           needsResend: true,
+          code: 'VALIDATION',
         },
         { status: 400 }
       );
@@ -71,8 +72,7 @@ async function getHandler(request: NextRequest) {
       { 
         success: false, 
         message: 'Error interno del servidor',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message })
-      },
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error && { detail: error.message }), code: 'INTERNAL'},
       { status: 500 }
     );
   }

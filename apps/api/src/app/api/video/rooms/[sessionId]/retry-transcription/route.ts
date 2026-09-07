@@ -43,7 +43,7 @@ async function postHandler(
 
     if (!sessionId) {
       return NextResponse.json(
-        { success: false, message: 'sessionId es requerido' },
+        { success: false, message: 'sessionId es requerido', code: 'VALIDATION'},
         { status: 400 }
       );
     }
@@ -55,6 +55,7 @@ async function postHandler(
           success: false,
           message:
             'Deepgram no está configurado. El administrador debe configurar la variable DEEPGRAM_API_KEY.',
+          code: 'INTERNAL',
         },
         { status: 500 }
       );
@@ -69,7 +70,7 @@ async function postHandler(
 
     if (!doc) {
       return NextResponse.json(
-        { success: false, message: 'No se encontró una sesión de video con ese ID.' },
+        { success: false, message: 'No se encontró una sesión de video con ese ID.', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -79,7 +80,7 @@ async function postHandler(
 
     if (!session) {
       return NextResponse.json(
-        { success: false, message: 'Sesión de video no encontrada en el registro.' },
+        { success: false, message: 'Sesión de video no encontrada en el registro.', code: 'NOT_FOUND'},
         { status: 404 }
       );
     }
@@ -95,6 +96,7 @@ async function postHandler(
             'No hay grabación disponible para esta sesión. ' +
             'La videollamada no fue grabada o el webhook de egress no se completó. ' +
             'Para futuras sesiones, asegúrate de que la grabación automática esté habilitada en LiveKit.',
+          code: 'VALIDATION',
         },
         { status: 400 }
       );
@@ -159,7 +161,7 @@ async function postHandler(
     // Errores de autenticación
     if (errorMessage.includes('Token') || errorMessage.includes('autorizado')) {
       return NextResponse.json(
-        { success: false, message: 'No autorizado. Inicia sesión nuevamente.' },
+        { success: false, message: 'No autorizado. Inicia sesión nuevamente.', code: 'UNAUTHORIZED'},
         { status: 401 }
       );
     }
@@ -181,6 +183,7 @@ async function postHandler(
         success: false,
         message: 'Error al procesar la solicitud',
         ...(process.env.NODE_ENV === 'development' && { detail: errorMessage }),
+        code: 'INTERNAL',
       },
       { status: 500 }
     );
